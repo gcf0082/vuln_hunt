@@ -1,0 +1,26 @@
+# Generated artifacts (vuln-orchestrator pipeline outputs)
+.vuln_agent_output/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python (for tools/)
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+
+# Node (if any tools use it later)
+node_modules/
+npm-debug.log*
+
+# Logs
+*.log
