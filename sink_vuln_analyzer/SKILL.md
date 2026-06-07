@@ -203,8 +203,3 @@ sink 函数位置（文件:行号）
 - **保留产物对应关系**：输出文件名 = 输入文件名 stem + 编号后缀，仅目录从 `sink_list/` 变成 `sink_findings/`
 - **失败显式标注**：走不通就显式标注、写进 `.vuln_agent_output/meta/error/analyze-sink-vulnerability.md`
 
-## 不在本 skill 范围内
-
-- sink 列表的采集（用户自行提供 / 后续 skill 负责）
-- 漏洞复核 → 交给 `review-vuln`
-- 修改源代码、加防护、加固建议 → 不在本 skill 范围
