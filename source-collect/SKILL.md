@@ -51,12 +51,15 @@ skill 不是"输入→文件"的转换器，而是**带收集能力的执行器*
 ## 文件命名
 
 ```
-{type}-{category}-{slug}.md
+{type}-{category}-{slug}-{MMDD-HHMMSS}.md
 ```
 
 - `{type}` = `iface`（接口类） | `noniface`（非接口类）
 - `{category}` = `REST` | `MQ` | `gRPC` | `WebSocket` | `GraphQL` | `SCRIPT` | `TOOL` | `CRON` | `CLI` | `SDK` 等
 - `{slug}` = 简短英文标识，小写字母 + 连字符，建议 `动词-名词` 或 `名词-动作`，如 `user-list`、`send-order-message`、`daily-cleanup`
+- `{MMDD-HHMMSS}` = 生成时的时间戳（月日-时分秒），如 `0608-021435`
+
+所有采集产物文件名**始终**带时间戳。同一秒内产生同名 type+category+slug 时，时间戳后追加 `-{n}`（n 从 2 起），如 `iface-REST-user-list-0608-021435-2.md`。
 
 文件名内 `{type}` 和 `{category}` 必须与文件内 `**类型**` 和 `**分类**` 完全一致。
 
@@ -118,7 +121,7 @@ skill 不是"输入→文件"的转换器，而是**带收集能力的执行器*
 
 REST 分类的成品文件，照着写就行。其它分类参考「按分类的补充字段」小节替换补充字段。
 
-文件名：`iface-REST-user-list.md`
+文件名：`iface-REST-user-list-{MMDD-HHMMSS}.md`
 
 ```markdown
 # 攻击面条目
@@ -149,7 +152,7 @@ REST 分类的成品文件，照着写就行。其它分类参考「按分类的
    - **遇到 spec 文件（swagger/openapi yaml、proto、`.graphqls`）定义的接口**：按 spec 里的 path/service/field 找实现类（看 operationId、tag、`@RequestMapping` 路径前缀、`message` 名等线索），把实现类的源码位置写到 `**来源**`；spec 文件路径放 `**接口定义**` / `**Proto**` / `**Schema**`。实在找不到实现类时退化到 spec 并标注"未找到实现"
 5. **逐个分类**：对每个候选对象确定 `type`、`category`、`slug`
 6. **抽取字段**：填通用字段 + 分类补充字段；缺信息就省略（不要编）
-7. **生成文件**：每个对象一个独立文件，命名遵守 `{type}-{category}-{slug}.md`
+7. **生成文件**：每个对象一个独立文件，命名遵守 `{type}-{category}-{slug}-{MMDD-HHMMSS}.md`
 8. **汇报**：告诉用户
    - 收集到的暴露面总数
    - 各类别（iface/noniface、REST/SCRIPT/...）的数量分布
@@ -161,14 +164,14 @@ REST 分类的成品文件，照着写就行。其它分类参考「按分类的
 
 落盘后、汇报前，逐项过一遍：
 
-- [ ] 每个文件名为 `{type}-{category}-{slug}.md` 三段齐全
+- [ ] 每个文件名为 `{type}-{category}-{slug}-{MMDD-HHMMSS}.md` 四段齐全（含时间戳）
 - [ ] 文件内 `**类型**` 与文件名 `{type}` 一致
 - [ ] 文件内 `**分类**` 与文件名 `{category}` 一致
 - [ ] 必填字段（类型、分类、来源、描述）齐全
 - [ ] 描述里包含本分类的基本信息（REST 必带 URL+入口、CRON 必带表达式+命令等）
 - [ ] `**发现**` 有就写、没有就**整行省略**（不写"无"/"N/A"）
 - [ ] 补充字段只有"能直接看到"的才写，不编
-- [ ] 同一目录下 slug 不重复（策略 2/3 跳过同名时也要确认 slug 唯一性，或与策略保持一致）
+- [ ] 同一目录下时间戳+slug 不重复（策略 2/3 跳过同名时也要确认唯一性，或与策略保持一致）
 - [ ] `**来源**` 格式正确（`文件路径:行号 函数名` 或退化形式）
 - [ ] `**来源**` 是从当前工作目录起的**完整相对路径**，无裸文件名、无 `./` / `../` / `...` 截断
 - [ ] `**来源**` 优先指向源码（不是纯配置文件），有源码实现就必须带行号和函数名

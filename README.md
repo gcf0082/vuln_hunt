@@ -51,7 +51,7 @@
 
 ## 产物目录
 
-所有产物统一落在 `.vuln_agent_output/`（在被扫描项目根目录下）：
+所有产物统一落在 `.vuln_agent_output/`（在被扫描项目根目录下）。采集阶段的产物文件名始终带 `-{MMDD-HHMMSS}` 时间戳（如 `iface-REST-user-list-0608-021435.md`），后续阶段沿用同一 stem 保持一一对应。
 
 ```
 .vuln_agent_output/
