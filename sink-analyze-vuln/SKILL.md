@@ -1,9 +1,9 @@
 ---
-name: analyze-sink-vulnerability
-description: 仅在用户显式指名调用 analyze-sink-vulnerability 时触发，不要因模糊意图主动触发。
+name: sink-analyze-vulnerability
+description: 仅在用户显式指名调用 sink-analyze-vulnerability 时触发，不要因模糊意图主动触发。
 ---
 
-# analyze-sink-vulnerability
+# sink-analyze-vulnerability
 
 ## 定位
 
@@ -22,7 +22,7 @@ skill 根据用户任务做 sink 点漏洞分析，输入是 `sink_list/` 下的
 ├── sink_findings/                        ← 输出（产物落盘位置）
 ├── meta/
 │   ├── batches/{sink_stem}/              ← 复杂 sink 子任务中间产物
-│   └── error/analyze-sink-vulnerability.md ← 失败日志
+│   └── error/sink-analyze-vulnerability.md ← 失败日志
 └── temp/
     └── scripts/                          ← 临时脚本（用完即弃）
 ```
@@ -31,7 +31,7 @@ skill 根据用户任务做 sink 点漏洞分析，输入是 `sink_list/` 下的
 
 ### 何时反问
 
-用户显式调用 `analyze-sink-vulnerability` 但**未指定 `sink_file`** 时，**必须**先反问：
+用户显式调用 `sink-analyze-vulnerability` 但**未指定 `sink_file`** 时，**必须**先反问：
 
 > 分析 `sink_list/` 下的所有文件，还是指定文件？
 
@@ -201,5 +201,5 @@ sink 函数位置（文件:行号）
 - **不动源**：不修改任何源文件、配置文件
 - **按需分配**：根据用户任务和 sink 复杂度灵活处理单条或多条
 - **保留产物对应关系**：输出文件名 = 输入文件名 stem + 编号后缀，仅目录从 `sink_list/` 变成 `sink_findings/`
-- **失败显式标注**：走不通就显式标注、写进 `.vuln_agent_output/meta/error/analyze-sink-vulnerability.md`
+- **失败显式标注**：走不通就显式标注、写进 `.vuln_agent_output/meta/error/sink-analyze-vulnerability.md`
 

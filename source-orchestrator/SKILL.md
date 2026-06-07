@@ -1,11 +1,11 @@
 ---
-name: vuln-orchestrator
-description: 仅在用户显式指名调用 vuln-orchestrator 时触发，不要因模糊意图主动触发。
+name: source-orchestrator
+description: 仅在用户显式指名调用 source-orchestrator 时触发，不要因模糊意图主动触发。
 ---
 
-# vuln-orchestrator
+# source-orchestrator
 
-把 4 个 skill **串起来**跑：generate-surface → analyze-surface → analyze-vulnerability → review-vuln。
+把 4 个 skill **串起来**跑：source-collect → source-analyze → source-analyze-vuln → source-review。
 
 - **本 skill 做**：按顺序触发子 skill，每阶段 5 并发
 - **本 skill 不做**：状态文件、断点续跑、失败重试、复杂汇报 —— 子 skill 失败就跳过该项
@@ -13,13 +13,13 @@ description: 仅在用户显式指名调用 vuln-orchestrator 时触发，不要
 ## 流水线
 
 ```
-[0] generate-surface
+[0] source-collect
    → discovered_surfaces/*.md
-[1] analyze-surface  (每条目 5 并发)
+[1] source-analyze  (每条目 5 并发)
    → analyzed_surfaces/*.md
 [2] analyze-vulnerability  (每条目 5 并发)
    → vuln_findings/*.md
-[3] review-vuln  (每条目 5 并发)
+[3] source-review  (每条目 5 并发)
    → vuln_reviews/*.md
 ```
 
@@ -38,7 +38,7 @@ description: 仅在用户显式指名调用 vuln-orchestrator 时触发，不要
 
 ### 1. 启动
 
-用户调用 `vuln-orchestrator` 时，按默认配置跑（扫描当前目录、全部暴露面类型、全量覆盖），直接进入流水线，不反问。
+用户调用 `source-orchestrator` 时，按默认配置跑（扫描当前目录、全部暴露面类型、全量覆盖），直接进入流水线，不反问。
 
 ### 2. 跑流水线
 
@@ -46,8 +46,8 @@ description: 仅在用户显式指名调用 vuln-orchestrator 时触发，不要
 
 **Stage 0**（单次）：
 ```
-subagent: surface-collector
-prompt: 调用 generate-surface skill
+subagent: source-collector
+prompt: 调用 source-collect skill
         - work_dir: .
         产物: .vuln_agent_output/discovered_surfaces/
         完成信号: .vuln_agent_output/.collect_done
@@ -57,8 +57,8 @@ prompt: 调用 generate-surface skill
 ```
 读 discovered_surfaces/*.md 得到 slug 列表
 对每个 slug 同时派发（一次 LLM 响应中发 ≤5 个 task）：
-  subagent: surface-analyst
-  prompt: 调用 analyze-surface skill
+  subagent: source-analyst
+  prompt: 调用 source-analyze skill
           - work_dir: .
           - surface_file: discovered_surfaces/{slug}.md
           产物: analyzed_surfaces/{slug}.md
@@ -68,8 +68,8 @@ prompt: 调用 generate-surface skill
 ```
 读 analyzed_surfaces/*.md 得到 slug 列表
 对每个 slug 同时派发：
-  subagent: vulnerability-analyst
-  prompt: 调用 analyze-vulnerability skill (surface_vuln_analyzer)
+  subagent: source-vulnerability-analyst
+  prompt: 调用 source-analyze-vuln skill
           - work_dir: .
           - input: analyzed_surfaces/{slug}.md
           产物: vuln_findings/*.md
@@ -79,8 +79,8 @@ prompt: 调用 generate-surface skill
 ```
 读 vuln_findings/*.md 得到 stem 列表
 对每个 stem 同时派发：
-  subagent: vuln-re-analyzer
-  prompt: 调用 review-vuln skill
+  subagent: source-re-analyzer
+  prompt: 调用 source-review skill
           - work_dir: .
           - input: vuln_findings/{stem}.md
           产物: vuln_reviews/{stem}.md

@@ -1,9 +1,9 @@
 ---
-name: generate-surface
+name: source-collect
 description: 按用户指令收集并落盘暴露面。
 ---
 
-# generate-surface
+# source-collect
 
 ## 定位
 
