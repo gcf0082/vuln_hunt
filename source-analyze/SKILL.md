@@ -170,4 +170,5 @@ ProcessBuilder pb = new ProcessBuilder("bash", "scripts/scan.sh", filename);
 - **不重复 discovery**：不去 `discovered_surfaces/` 之外找新对象，不为"详细"而扩范围
 - **不动源**：不修改任何源文件、配置文件、discovery 产物
 - **不替调用方决策**：不创建完成信号文件、不主动删/跳产物；幂等策略由调用方负责
+- **不动目标分析目录**：所有产物、临时文件、临时脚本**只能**写到 `.vuln_agent_output/` 下，**不得**在被分析项目源码目录里写任何文件
 

@@ -202,4 +202,5 @@ sink 函数位置（文件:行号）
 - **按需分配**：根据用户任务和 sink 复杂度灵活处理单条或多条
 - **保留产物对应关系**：输出文件名 = 输入文件名 stem + 编号后缀，仅目录从 `sink_list/` 变成 `sink_findings/`
 - **失败显式标注**：走不通就显式标注、写进 `.vuln_agent_output/meta/error/sink-analyze-vulnerability.md`
+- **不动目标分析目录**：所有产物、临时文件、临时脚本**只能**写到 `.vuln_agent_output/` 下，**不得**在被分析项目源码目录里写任何文件
 

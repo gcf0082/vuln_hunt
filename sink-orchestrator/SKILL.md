@@ -28,7 +28,9 @@ description: 仅在用户显式指名调用 sink-orchestrator 时触发，不要
 ├── sink_list/
 ├── sink_findings/
 ├── sink_reviews/
-└── meta/error/
+├── meta/error/
+└── temp/
+    └── scripts/
 ```
 
 ## 工作流程
@@ -105,3 +107,4 @@ prompt: 调用 sink-collect skill
 - **不改子 skill**：不修改 sink-collect / sink-analyze-vuln / sink-review 的任何 `SKILL.md`
 - **不动源**：本 skill 不修改被扫描项目的任何源文件
 - **幂等**：重复跑会基于子 skill 自身的产物策略（覆盖 / 追加 / 清空）行为
+- **不动目标分析目录**：所有产物、临时文件、临时脚本**只能**写到 `.vuln_agent_output/` 下，**不得**在被分析项目源码目录里写任何文件
