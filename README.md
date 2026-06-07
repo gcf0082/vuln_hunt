@@ -1,66 +1,62 @@
 # vuln_hunt
 
-Vulnerability hunting toolkit — a 5-skill pipeline for **attack surface collection → surface analysis → vulnerability detection → review → orchestration**.
+漏洞扫描工具集 —— 一条 4 阶段的流水线：**攻击面收集 → 攻击面分析 → 漏洞分析 → 漏洞复核**。
 
-## Skills Overview
+## Skill 总览
 
 ```
 [0] generate-surface     ─┐
-                          │  user-instruction triggered
+                          │  按用户指令触发
                           ▼
-[1] analyze-surface      ─┐  per surface, 5 concurrent
+[1] analyze-surface      ─┐  每条目 5 并发
                           ▼
-[2] analyze-vulnerability─┐  per surface, 5 concurrent
+[2] analyze-vulnerability─┐  每条目 5 并发
                           ▼
-[3] review-vuln          ─┘  per finding, 5 concurrent
+[3] review-vuln          ─┘  每条目 5 并发
 
-      [★ vuln-orchestrator]  (NEW) 整条流水线编排器，含 stage 0 入口、并发派发、断点续跑
+       [★ vuln-orchestrator]  编排整条流水线
 ```
 
-| Skill | Trigger | Purpose |
+| Skill | 触发 | 作用 |
 |---|---|---|
-| `generate_surface/` | user instruction | Collect attack surfaces (REST/MQ/gRPC/CRON/CLI/SDK/...) |
-| `analyze-surface/` | explicit | Trace call chain + draw mermaid flowchart for one surface |
-| `surface_vuln_analyzer/` | explicit | Detect vulnerabilities in one analyzed surface (4-档: VULN/DISMISSED/CLEAN/SUSPECTED) |
-| `review-vuln/` | explicit | Re-review first-round findings with challenger mindset (VULN/NOVULN/SUSPECTED) |
-| `vuln-orchestrator/` | explicit | Orchestrate the entire 4-stage pipeline with state tracking and resume support |
+| `generate_surface/` | 显式调用 | 收集攻击面（REST / MQ / gRPC / CRON / CLI / SDK 等）|
+| `analyze-surface/` | 显式调用 | 跟踪调用链 + 画 mermaid 流程图（单条目）|
+| `surface_vuln_analyzer/` | 显式调用 | 漏洞分析（单条目，4 档结论：VULN / DISMISSED / CLEAN / SUSPECTED）|
+| `review-vuln/` | 显式调用 | 复核漏洞结论（VULN / NOVULN / SUSPECTED）|
+| `vuln-orchestrator/` | 显式调用 | 编排整条流水线，含状态跟踪、断点续跑、并发派发 |
 
-## Pipeline Data Flow
+## 产物目录
 
-All artifacts live in `.vuln_agent_output/` under the target project root:
+所有产物统一落在 `.vuln_agent_output/`（在被扫描项目根目录下）：
 
 ```
 .vuln_agent_output/
-├── .orchestrator-state.json        ← vuln-orchestrator state (source of truth)
-├── .collect_done                   ← generate-surface completion signal
-├── discovered_surfaces/            ← stage 0 output
-├── analyzed_surfaces/              ← stage 1 output
-├── vuln_findings/                  ← stage 2 output
-├── vuln_reviews/                   ← stage 3 output
-└── meta/error/                     ← per-skill error logs
+├── .orchestrator-state.json   ← 编排器状态（仅 vuln-orchestrator 写）
+├── .collect_done              ← generate-surface 完成信号
+├── discovered_surfaces/       ← 阶段 0 产物
+├── analyzed_surfaces/         ← 阶段 1 产物
+├── vuln_findings/             ← 阶段 2 产物
+├── vuln_reviews/              ← 阶段 3 产物
+└── meta/error/                ← 各 skill 错误日志
 ```
 
-## Quick Start
+## 快速开始
 
-### Manual flow (call skills one by one)
+### 方式一：手动串联
 
-1. `generate_surface` — give it a target project and collect attack surfaces
-2. `analyze-surface` — for each surface file, get call chain + flowchart
-3. `surface_vuln_analyzer` — for each analyzed surface, get vulnerability findings
-4. `review-vuln` — for each finding, re-verify with challenger posture
+1. `generate_surface` —— 收集攻击面
+2. `analyze-surface` —— 分析每条攻击面
+3. `surface_vuln_analyzer` —— 找漏洞
+4. `review-vuln` —— 复核漏洞
 
-### Orchestrated flow (one call runs all)
+### 方式二：编排器一键跑
 
 ```
-@vuln-orchestrator start
+@vuln-orchestrator
 ```
 
-Subcommands: `start` / `resume` / `status` / `rerun-stage N` / `retry-failed` / `stop` / `abort`
-
-## Design
-
-See [`docs/superpowers/specs/2026-06-07-vuln-orchestrator-design.md`](docs/superpowers/specs/2026-06-07-vuln-orchestrator-design.md) for the full vuln-orchestrator design and [`docs/superpowers/plans/2026-06-07-vuln-orchestrator.md`](docs/superpowers/plans/2026-06-07-vuln-orchestrator.md) for the implementation plan.
+子命令：`start` / `resume` / `status` / `stop`
 
 ## License
 
-Apache License 2.0 — see [LICENSE](LICENSE).
+Apache License 2.0 —— 见 [LICENSE](LICENSE)。
