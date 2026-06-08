@@ -67,6 +67,18 @@
 └── meta/error/                ← 各 skill 错误日志
 ```
 
+## 默认行为约定
+
+后续每个下游分析 skill（source-analyze / source-analyze-vuln / source-review / sink-analyze-vuln / sink-review / source-plan-vuln-tasks）遵循同一默认约定：
+
+- **用户没指定文件** → 默认处理上一 stage 产物目录下所有 `*.md`，无需反问
+- **用户指定了文件** → 处理指定文件
+- **同名产物** → 默认覆盖
+- **多文件** → 由 orchestrator 5 并发派发
+- **保留时间戳** → 上一 stage 文件名带的 MMDD-HHMMSS 时间戳在所有下游 stage 产物中保持不变
+
+入口采集 skill（source-collect / sink-collect）除外——它们没有"上一 stage"，需要用户给 scope/type。
+
 ## 快速开始
 
 ### Source 流水线：手动串联
