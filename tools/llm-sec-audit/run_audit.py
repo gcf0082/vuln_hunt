@@ -4,7 +4,8 @@ import argparse, os, pathlib, subprocess, sys
 parser = argparse.ArgumentParser()
 parser.add_argument("--code-file")
 parser.add_argument("--stdin-file-list", action="store_true", help="从 stdin 读取文件路径列表（一行一个）")
-parser.add_argument("--prompt-file", required=True)
+parser.add_argument("--prompt-file")
+parser.add_argument("--prompt")
 parser.add_argument("--output-dir", default=".")
 parser.add_argument("--thinking", action="store_true", help="显示 LLM 思考过程")
 args = parser.parse_args()
@@ -13,9 +14,13 @@ if not args.code_file and not args.stdin_file_list:
     parser.error("必须指定 --code-file 或 --stdin-file-list")
 if args.code_file and args.stdin_file_list:
     parser.error("--code-file 和 --stdin-file-list 互斥")
+if not args.prompt_file and not args.prompt:
+    parser.error("必须指定 --prompt-file 或 --prompt")
+if args.prompt_file and args.prompt:
+    parser.error("--prompt-file 和 --prompt 互斥")
 
-prompt_path = pathlib.Path(args.prompt_file).resolve()
 cli = pathlib.Path(__file__).parent / "llm_prompt_cli.py"
+prompt_arg = ["--prompt-file", str(pathlib.Path(args.prompt_file).resolve())] if args.prompt_file else ["--prompt", args.prompt]
 
 files = [args.code_file] if args.code_file else [line.strip() for line in sys.stdin if line.strip()]
 if not files:
@@ -35,11 +40,11 @@ for f in files:
         env["showThinking"] = "true"
         env["enableThinking"] = "true"
         r = subprocess.run(
-            [sys.executable, str(cli), "--stdin", "--prompt-file", str(prompt_path)],
+            [sys.executable, str(cli), "--stdin", *prompt_arg],
             input=stdin_input, stdout=subprocess.PIPE, stderr=None, text=True, env=env)
     else:
         r = subprocess.run(
-            [sys.executable, str(cli), "--stdin", "--prompt-file", str(prompt_path)],
+            [sys.executable, str(cli), "--stdin", *prompt_arg],
             input=stdin_input, capture_output=True, text=True)
 
     out.parent.mkdir(parents=True, exist_ok=True)
