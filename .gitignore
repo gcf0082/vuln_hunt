@@ -17,6 +17,7 @@ __pycache__/
 *$py.class
 *.egg-info/
 .pytest_cache/
+.env
 
 # Node (if any tools use it later)
 node_modules/
