@@ -14,20 +14,20 @@ description: 仅在用户显式指名调用 sink-orchestrator 时触发，不要
 
 ```
 [0] sink-collect                 (单次)
-   → sink_list/*.md
+   → sink_list/**/*.md
 [1] sink-analyze-vuln  (每条目 5 并发)
-   → sink_findings/*.md
+   → sink_findings/**/*.md
 [2] sink-review   (每条目 5 并发)
-   → sink_reviews/*.md
+   → sink_reviews/**/*.md
 ```
 
 **产物**统一在 `.vuln_agent_output/` 下（当前工作目录视为被扫描项目根）：
 
 ```
 .vuln_agent_output/
-├── sink_list/
-├── sink_findings/
-├── sink_reviews/
+├── sink_list/                 ← 可含子目录（如 sql/、cmd/）
+├── sink_findings/             ← 镜像输入子目录结构
+├── sink_reviews/              ← 镜像输入子目录结构
 ├── meta/error/
 └── temp/
     └── scripts/
@@ -60,24 +60,24 @@ prompt: 调用 sink-collect skill
 
 **Stage 1**（每 sink 一个，5 并发）：
 ```
-读 sink_list/*.md 得到 sink 列表
+读 sink_list/**/*.md（含子目录）得到 sink 列表
 对每个 sink 同时派发（一次 LLM 响应中发 ≤5 个 task）：
   subagent: sink-vulnerability-analyst
   prompt: 调用 sink-analyze-vuln skill
           - work_dir: .
-          - sink_file: sink_list/{stem}.md
-          产物: sink_findings/{stem}-{n}.md
+          - sink_file: {sink 相对路径，如 sql/sql-user-query-0608-021435.md}
+          产物: sink_findings/{子目录/}{stem}-{n}.md
 ```
 
 **Stage 2**（每 finding 一个，5 并发）：
 ```
-读 sink_findings/*.md 得到 stem 列表
+读 sink_findings/**/*.md（含子目录）得到 stem 列表
 对每个 stem 同时派发：
   subagent: sink-re-analyzer
   prompt: 调用 sink-review skill
           - work_dir: .
-          - sink_finding_file: sink_findings/{stem}.md
-          产物: sink_reviews/{stem}.md
+          - sink_finding_file: sink_findings/{stem 相对路径}
+          产物: sink_reviews/{子目录/}{stem}.md
 ```
 
 **5 并发的实现**：在同一次 LLM 响应中发起 ≤5 个 `task` 调用 → 等所有返回 → 解析结果 → 进入下一批。
