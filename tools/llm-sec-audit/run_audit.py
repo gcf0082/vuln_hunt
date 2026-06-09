@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse, os, pathlib, subprocess, sys
+from datetime import datetime
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--code-file")
@@ -32,8 +33,14 @@ for f in files:
     numbered = "".join(f"{i+1:6d}  {l}" for i, l in enumerate(lines))
     stdin_input = f"文件路径：{code_path}\n\n{numbered}"
 
-    safe_name = str(code_path).replace("/", "_")
-    out = pathlib.Path(args.output_dir) / f"{safe_name}.txt"
+    ts = datetime.now().strftime("%m%d-%H%M%S")
+    stem = code_path.stem
+    suffix = code_path.suffix
+    out = pathlib.Path(args.output_dir) / f"{ts}_{code_path.name}.txt"
+    n = 2
+    while out.exists():
+        out = pathlib.Path(args.output_dir) / f"{ts}_{stem}-{n}{suffix}.txt"
+        n += 1
 
     if args.thinking:
         env = os.environ.copy()
