@@ -1,9 +1,9 @@
 ---
-name: sink-scan
-description: 仅在用户显式指名调用 sink-scan 时触发，不要因模糊意图主动触发。
+name: llm-sec-audit
+description: 仅在用户显式指名调用 llm-sec-audit 时触发，不要因模糊意图主动触发。
 ---
 
-# sink-scan
+# llm-sec-audit
 
 基于 `llm_prompt_cli` 的代码安全审计 skill。遍历目标目录中的代码文件，逐个调用 LLM 分析安全问题，每个文件独立输出分析结果。
 
