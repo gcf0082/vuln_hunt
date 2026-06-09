@@ -104,9 +104,9 @@ def main() -> int:
         print("Error: at most one of --input, --input-file, --stdin is allowed", file=sys.stderr)
         return 1
 
-    env_file = args.config or ".env"
+    default_env = str(Path(__file__).parent / ".env")
+    env_file = args.config or default_env
     if not load_dotenv(env_file, override=False):
-        # godotenv prints a warning on missing/unreadable file; mirror that.
         if not Path(env_file).exists():
             print(f"Warning: could not load config file {env_file}: not found", file=sys.stderr)
 
