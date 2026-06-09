@@ -4,7 +4,7 @@ import argparse, pathlib, subprocess, sys
 parser = argparse.ArgumentParser()
 parser.add_argument("--code-file", required=True)
 parser.add_argument("--prompt-file", required=True)
-parser.add_argument("--output-dir", default=".vuln_agent_output/sink_scan")
+parser.add_argument("--output-dir", default=".")
 args = parser.parse_args()
 
 code_path = pathlib.Path(args.code_file).resolve()
