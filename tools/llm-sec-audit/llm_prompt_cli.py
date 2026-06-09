@@ -152,6 +152,7 @@ def main() -> int:
             print(f"Warning: invalid timeout={raw_timeout!r}, ignored", file=sys.stderr)
 
     show_thinking = parse_bool(os.getenv("showThinking", ""))
+    enable_thinking = parse_bool(os.getenv("enableThinking", ""))
     verify_tls = parse_bool_default(os.getenv("verifyTLS", ""), False)
     custom_headers = parse_headers(os.getenv("headers", ""))
 
@@ -220,6 +221,8 @@ def main() -> int:
         req_kwargs["presence_penalty"] = presence_penalty
     if frequency_penalty is not None:
         req_kwargs["frequency_penalty"] = frequency_penalty
+    if enable_thinking:
+        req_kwargs["extra_body"] = {"thinking": True}
 
     try:
         stream = client.chat.completions.create(**req_kwargs)

@@ -23,6 +23,7 @@ out = pathlib.Path(args.output_dir) / f"{safe_name}.txt"
 if args.thinking:
     env = os.environ.copy()
     env["showThinking"] = "true"
+    env["enableThinking"] = "true"
     r = subprocess.run(
         [sys.executable, str(cli), "--stdin", "--prompt-file", str(prompt_path)],
         input=stdin_input, stdout=subprocess.PIPE, stderr=None, text=True, env=env)
