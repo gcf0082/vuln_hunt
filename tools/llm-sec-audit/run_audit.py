@@ -33,4 +33,6 @@ else:
 
 out.parent.mkdir(parents=True, exist_ok=True)
 out.write_text(f"处理文件：{code_path}\n\n{r.stdout or (r.stderr if not args.thinking else '')}")
+print(f"\n处理文件：{code_path}\n")
+print(r.stdout)
 sys.exit(r.returncode)
