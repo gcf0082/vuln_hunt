@@ -57,33 +57,9 @@ description: 仅在用户显式指名调用 callchain-trace 时触发。
 
 ## 跟踪流程
 
-```
-trace(func, depth=0, path=[], visited=set()):
-  if func in visited → 闭环，记叶子(状态=闭环)
-    return
-  if func 在项目中找不到定义 → 真正叶子，记叶子(状态=外部函数)
-    return
+从入口函数开始，读取函数体提取所有调用，逐个分类并确定叶子状态。核心的递归展开，非核心和外部函数记叶子。检测到环立即停止。
 
-  visited.add(func)
-  读 func 函数体
-  提取所有函数调用 callees[]
-  每个 callee 分类
-  搜索 callee 在项目中是否存在定义
-
-  if callee 在项目中找不到定义:
-    记叶子(状态=外部函数)
-  elif callee 是核心:
-    trace(callee, depth+1, path+[func], visited)
-  else:
-    记叶子(状态=跳过)
-```
-
-预期链形：
-
-```
-入口 → 核心 → 核心 → ... → 核心 → 外部函数（真正的叶子）
-                               ↳ 跳过（源码存在但非核心）
-```
+预期链形：入口 → 核心 → ... → 核心 → 外部函数 / 跳过
 
 ### 接口/抽象方法处理
 
