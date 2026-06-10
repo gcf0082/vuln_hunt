@@ -21,31 +21,22 @@ description: 仅在用户显式指名调用 callchain-trace 时触发。
 
 ## 核心 vs 非核心分类
 
-每个函数名先用**两轮判定**确定是否追踪：
-
-### 第一轮：名称启发
+### 名称启发
 
 | 特征 | 初步分类 | 说明 |
-|---|---|---|
-| 含领域术语 `processOrder` / `calculatePremium` / `approveLoan` | 核心嫌疑 | 看起来在做业务 |
+|:---|:---|:---|
+| 含领域术语 `processOrder` / `calculatePremium` / `approveLoan` | 核心 | 业务逻辑 |
 | 含 `log` / `print` / `debug` / `tracing` | 非核心 | 日志 |
-| 含 `validate` / `check` / `assert` / `require` / `isValid` | 需看体 | 可能是核心也可能是普通校验 |
-| 含 `get` / `set` / `to` / `from` / `format` / `convert` / `parse` | 非核心 | 纯工具转换 |
+| 含 `validate` / `check` / `assert` / `require` / `isValid` | 看语境 | 结合业务上下文判断 |
+| 含 `get` / `set` / `to` / `from` / `format` / `convert` / `parse` | 非核心 | 工具转换 |
 | 含 `save` / `persist` / `store` / `delete` / `update` | 核心 | IO/数据库 |
-| 含 `send` / `fetch` / `request` / `call` / `invoke` | 核心嫌疑 | 网络/外部调用 |
+| 含 `send` / `fetch` / `request` / `call` / `invoke` | 核心 | 网络/外部调用 |
 | 标准库函数 / 三方库函数 | 非核心 | 不追进标准库 |
 | 只有一行返回/抛异常的包装函数 | 非核心 | 纯转发 |
 
-### 第二轮：体检查
-
-对"需看体"的调用阅读函数体判定：
-
-- **核心**：函数体内涉及 DB 操作、文件 I/O、网络请求、命令执行、业务决策（if 条件含领域含义）、调用其他已被判定核心的函数
-- **非核心**：函数体仅包含 return / 抛异常 / 日志 / getter-setter / 仅调用标准库工具函数
-
 ### 语境再判断
 
-考虑系统整体目的。例如合规系统中 `validateCompliance` 虽然名含 validate，但它是核心业务。
+名称启发无法确定的（如 validate/check）结合业务上下文判定。合规系统中 `validateCompliance` 是核心业务，普通空值校验则不是。
 
 ## 叶子定义
 
