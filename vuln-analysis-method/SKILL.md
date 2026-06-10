@@ -1,6 +1,6 @@
 ---
 name: vuln-analysis-method
-description: 通用代码审计方法论。仅当用户显式指名调用本 skill 时触发，不要因模糊意图主动触发。用户说"用 vuln-analysis-method"、"分析方法论"等显式提及本 skill 名称时才激活。
+description: 通用代码审计方法论。用户显式说"用 vuln-analysis-method"时才触发。
 ---
 
 # vuln-analysis-method
