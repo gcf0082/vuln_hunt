@@ -134,17 +134,21 @@ trace(func, depth=0, path=[], visited=set()):
 
 ### 叶子核心目标
 
-只汇总**有业务语义的核心终点**——标准库/三方件的基础调用（okhttp3、JDBC、log4j 等）不出现：
+只汇总**涉及文件/命令/SQL/网络的核心终点**，纯工具类调用（format、parse、log、toString 等）不出现：
 
 | 核心目标 | 所在树 | 说明 |
 |---|---|---|
-| `FileInputStream.open()` + `{filePath}` | 树1 | 读取 `/data/report.csv` |
-| `Runtime.exec()` + `{cmd}` | 树1 | 执行命令 `bash scan.sh {input}` |
+| `FileInputStream.open()` — `/data/report.csv` | 树1 | 读取数据文件 |
+| `Runtime.exec()` — `bash scan.sh {input}` | 树1 | 执行扫描脚本 |
+| `PreparedStatement.execute()` — 拼接 SQL | 树2 | 更新订单状态 |
+| `okhttp3.Call.execute()` — `POST /api/payment` | 树2 | 调用支付网关 |
 ```
 
-- 调用树上保留完整结构（含外部函数标记），汇总表只提取有业务价值的核心终点
-- 标准库/三方件的通用调用（connect、execute、parse、format）不列入汇总
-- 每个核心目标标注业务上下文（读什么文件、请求什么 URL、执行什么命令）
+不列入汇总的举例：`String.format()` / `DateTime.now()` / `log.info()` / `JSON.parse()`。
+
+- 调用树上保留完整结构（含外部函数标记），汇总表只提取文件/命令/SQL/网络四类核心操作
+- 每个核心目标标注操作对象（文件路径、命令、SQL 特征、URL/接口名）
+- 同一条核心分支以最外层操作为准，避免链上重复
 
 ## 质量纪律
 
