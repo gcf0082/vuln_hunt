@@ -32,7 +32,7 @@ skill 根据用户任务做 sink 点漏洞分析，输入是 `sink_list/` 下的
 
 ### 默认行为
 
- 用户没指定文件时，**默认处理 `.vuln_agent_output/sink_list/**/*.md` 下所有文件（含子目录）**，无需反问。
+ 用户没指定文件时，**默认递归处理 `.vuln_agent_output/sink_list/` 下所有 `.md` 文件**，无需反问。
  同名产物默认覆盖。多文件由调用方（orchestrator）并发派发（5 并发）。
  输入文件名带 MMDD-HHMMSS 时间戳，产物文件名沿用输入 stem 保留时间戳，与上一 stage 一一对应。输入在子目录中的，产物保持同一子目录结构（如 `sink_list/sql/X-0608-021435.md` → `sink_findings/sql/VULN-X-0608-021435-1.md`）。
 

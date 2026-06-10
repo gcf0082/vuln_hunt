@@ -14,11 +14,11 @@ description: 仅在用户显式指名调用 sink-orchestrator 时触发，不要
 
 ```
 [0] sink-collect                 (单次)
-   → sink_list/**/*.md
+    → sink_list/（递归 .md）
 [1] sink-analyze-vuln  (每条目 5 并发)
-   → sink_findings/**/*.md
+    → sink_findings/（递归 .md）
 [2] sink-review   (每条目 5 并发)
-   → sink_reviews/**/*.md
+    → sink_reviews/（递归 .md）
 ```
 
 **产物**统一在 `.vuln_agent_output/` 下（当前工作目录视为被扫描项目根）：
@@ -60,7 +60,7 @@ prompt: 调用 sink-collect skill
 
 **Stage 1**（每 sink 一个，5 并发）：
 ```
-读 sink_list/**/*.md（含子目录）得到 sink 列表
+递归读 sink_list/ 下所有 .md 得到 sink 列表
 对每个 sink 同时派发（一次 LLM 响应中发 ≤5 个 task）：
   subagent: sink-vulnerability-analyst
   prompt: 调用 sink-analyze-vuln skill
@@ -71,7 +71,7 @@ prompt: 调用 sink-collect skill
 
 **Stage 2**（每 finding 一个，5 并发）：
 ```
-读 sink_findings/**/*.md（含子目录）得到 stem 列表
+递归读 sink_findings/ 下所有 .md 得到 stem 列表
 对每个 stem 同时派发：
   subagent: sink-re-analyzer
   prompt: 调用 sink-review skill
