@@ -110,8 +110,6 @@ deploy.sh:12 →  cp target/app.jar /usr/local/app/
 trace(func, depth=0, path=[], visited=set()):
   if func in visited → 闭环，记叶子(状态=闭环)
     return
-  if depth > 15 → 超深，记叶子(状态=超深)
-    return
   if func 在项目中找不到定义 → 真正叶子，记叶子(状态=外部函数)
     return
 
@@ -159,12 +157,10 @@ trace(func, depth=0, path=[], visited=set()):
 ## 终止条件
 
 | 条件 | 标记 | 说明 |
-|---|---|---|---|
-| 找不到定义（标准库/三方库/外部服务） | 外部函数 🔗 | 默认叶子状态；MyBatis XML / shell 脚本 / Dockerfile 等有项目配置可追踪的不算 |
-| 源码存在但判定为非核心 | 跳过 ⛔ | 如 `log.info()` / `getTime()`，标记可追但选择跳过 |
-| 检测到环 | 闭环 🔄 | 标注循环引用关系 |
-| 接口多实现 | 多态 ⚡ | 标注找到几个实现 |
-| 深度 > 15 | 超深 ⚠ | 标注已追踪层级 |
+| 找不到定义（标准库/三方库/外部服务） | [外部] | 默认叶子状态；MyBatis XML / shell 脚本 / Dockerfile等有项目配置可追踪的不算 |
+| 源码存在但判定为非核心 | [跳过] | 如 `log.info()` / `getTime()`，标记可追但选择跳过 |
+| 检测到环 | [闭环] | 标注循环引用关系 |
+| 接口多实现 | [多态] | 标注找到几个实现 |
 
 ## 输出格式
 
@@ -177,8 +173,8 @@ trace(func, depth=0, path=[], visited=set()):
 ├── {func_a}（核心）
 │   ├── {func_a1}（核心）
 │   │   └── OrderMapper.xml:47 — `SELECT * FROM orders WHERE id = #{id}`
-│   └── {func_a2}（多态 ⚡ — 找到 2 个实现，见子树）
-├── {func_b}（跳过 ⛔ — 日志记录）
+│   └── {func_a2}（[多态] — 找到 2 个实现，见子树）
+├── {func_b}（[跳过] — 日志记录）
 ├── {func_c}（核心）
 │   └── deploy.sh
 │       ├── deploy.sh:5 — `git pull origin main`
@@ -220,4 +216,3 @@ trace(func, depth=0, path=[], visited=set()):
 - **环必检**：路径中检测到重复函数立即停止并标注
 - **签名完整**：每个函数标注 `{文件名:行号}`，便于验证
 - **多态不静默**：接口/抽象方法调用必须有去向说明（具体实现 / 边界 / 标注无法确定）
-- **不追过高**：适当控制深度（默认 15 跳），给用户解释截断的原因和位置
