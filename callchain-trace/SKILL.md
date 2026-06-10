@@ -1,6 +1,6 @@
 ---
 name: callchain-trace
-description: 仅在用户显式指名调用 callchain-trace 时触发。从入口函数/接口生成核心向下调用链，只跟踪业务强相关函数，必须跟踪到最底层。遇分支复杂可拆多棵树。
+description: 仅在用户显式指名调用 callchain-trace 时触发。
 ---
 
 # callchain-trace
