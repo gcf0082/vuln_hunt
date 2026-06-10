@@ -96,7 +96,39 @@ description: 仅在用户显式指名调用 callchain-trace 时触发。
 
 **调用树**：按层级缩进展示，每个函数标注所在树和状态。示例——树 1 为正常流程入口，调用了核心函数和跳过函数；树 2 为异常分支。
 
-**叶子核心目标**：表格形式汇总两类核心终点——文件/命令/SQL/网络操作，以及 check 类外部函数。每个核心目标标注操作对象，同一条核心分支以最外层操作为准。
+## 输出格式
+
+### 调用树
+
+按层级缩进展示，每层一个函数。格式规则：
+
+```
+### 树 N：{标题 / 分叉条件}
+入口函数
+├── 业务函数（核心）
+│   ├── OrderMapper.xml:47 — SELECT * FROM ...
+│   └── deploy.sh:5 $ git pull origin main
+├── 工具函数（[跳过]）
+└── 接口方法（[多态] — 找到 2 个实现）
+```
+
+- 首行为入口函数，向下逐层缩进
+- 中间节点标注分类，叶子节点标注状态标记
+- SQL 节点用 `{xml}:{行号} — SQL正文`，脚本命令用 `{file}:{行号} $ 命令`
+
+### 叶子核心目标
+
+表格汇总两类核心终点：
+
+| 核心目标 | 说明 |
+|---|---|
+| `OrderMapper.xml:47` | `SELECT * FROM orders WHERE id = #{id}` |
+| `deploy.sh:5` | git pull origin main |
+| `deploy.sh:12` | cp target/app.jar /usr/local/app/ |
+| `okhttp3:execute` | POST /api/payment |
+| `jakarta.validation:validate()` | 外部 check，项目未重写 |
+
+第一类：文件/命令/SQL/网络操作，第二类：check 类外部函数。同一条核心分支以最外层操作为准。
 
 ## 质量纪律
 
