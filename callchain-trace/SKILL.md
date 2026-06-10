@@ -192,7 +192,10 @@ trace(func, depth=0, path=[], visited=set()):
 
 ### 叶子核心目标
 
-只汇总量终涉及**文件/命令/SQL/网络**的核心操作：
+汇总两类：
+
+1. **文件/命令/SQL/网络**核心操作
+2. **check 类**外部函数（在项目中找不到定义的安全校验点，如 `validate`、`check`、`assert`、`verify`、`require`、`ensure`）
 
 | 核心目标 | 所在树 | 说明 |
 |---|---|---|
@@ -200,11 +203,13 @@ trace(func, depth=0, path=[], visited=set()):
 | `deploy.sh:5` | 树1 | `git pull origin main` |
 | `deploy.sh:12` | 树1 | `cp target/app.jar /usr/local/app/` |
 | `okhttp3:execute` → `POST /charge` | 树1 | 调用支付网关 |
+| `org.apache.commons:validateInput()` | 树1 | 外部 check，项目未重写 |
+| `jakarta.validation:validate()` | 树2 | 外部 check，项目未重写 |
 ```
 
 不列入汇总的举例：`String.format()` / `DateTime.now()` / `log.info()` / `JSON.parse()`。
 
-- 调用树上保留完整结构（含外部函数标记），汇总表只提取文件/命令/SQL/网络四类核心操作
+- 调用树上保留完整结构（含跳过节点和外部标记），汇总表筛选以上两类
 - 每个核心目标标注操作对象（文件路径、命令、SQL 特征、URL/接口名）
 - 同一条核心分支以最外层操作为准，避免链上重复
 
