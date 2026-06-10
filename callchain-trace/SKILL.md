@@ -132,20 +132,19 @@ trace(func, depth=0, path=[], visited=set()):
 ### 树 2：{标题（如"退款分支，if refundFlag"）}
 ...
 
-### 叶子函数汇总
+### 叶子核心目标
 
-只记录核心路径上的终止节点，跳过/辅助类函数不出现：
+只汇总**有业务语义的核心终点**——标准库/三方件的基础调用（okhttp3、JDBC、log4j 等）不出现：
 
 | 核心目标 | 所在树 | 说明 |
 |---|---|---|
-| `okhttp3.Call.execute()` | 树1 | 发送 HTTP 请求 |
-| `java.sql.PreparedStatement.execute()` | 树1 | 执行 SQL |
-| `java.io.FileInputStream.open()` | 树2 | 读取文件 `/data/report.csv` |
+| `FileInputStream.open()` + `{filePath}` | 树1 | 读取 `/data/report.csv` |
+| `Runtime.exec()` + `{cmd}` | 树1 | 执行命令 `bash scan.sh {input}` |
 ```
 
-- 每个核心叶子标注**所在文件:行号**
-- 调用树上保留完整结构（含跳过节点），叶子汇总只筛选核心路径终点
-- 同一条核心分支最外层的调用为准，中间链上的核心函数不必重复列出
+- 调用树上保留完整结构（含外部函数标记），汇总表只提取有业务价值的核心终点
+- 标准库/三方件的通用调用（connect、execute、parse、format）不列入汇总
+- 每个核心目标标注业务上下文（读什么文件、请求什么 URL、执行什么命令）
 
 ## 质量纪律
 
