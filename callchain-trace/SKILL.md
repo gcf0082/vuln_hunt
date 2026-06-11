@@ -75,12 +75,12 @@ description: 仅在用户显式指名调用 callchain-trace 时触发。
 
 ```
 ### 树 1：主流程
-processOrder (OrderController.java:32)
-├── calculateAmount (OrderService.java:58)（核心）
-│   └── OrderMapper.xml:47 — SELECT * FROM orders WHERE id = #{id}
-├── paymentService.charge (PaymentService.java:21)（核心）
+processOrder (src/main/java/com/example/OrderController.java:32)
+├── calculateAmount (src/main/java/com/example/OrderService.java:58)（核心）
+│   └── src/main/resources/mapper/OrderMapper.xml:47 — SELECT * FROM orders WHERE id = #{id}
+├── paymentService.charge (src/main/java/com/example/PaymentService.java:21)（核心）
 │   └── okhttp3:execute（[外部] — POST /api/charge）
-└── notifyUser (NotificationService.java:15)（核心）
+└── notifyUser (src/main/java/com/example/NotificationService.java:15)（核心）
     └── sendEmail（[外部] — javax.mail:send）
 ```
 
