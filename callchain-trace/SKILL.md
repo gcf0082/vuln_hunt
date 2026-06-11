@@ -81,18 +81,17 @@ description: 仅在用户显式指名调用 callchain-trace 时触发。
 
 ```
 ### 树 1：主流程
-processOrder
-├── calculateAmount（核心）
+processOrder (OrderController.java:32)
+├── calculateAmount (OrderService.java:58)（核心）
 │   └── OrderMapper.xml:47 — SELECT * FROM orders WHERE id = #{id}
-├── paymentService.charge（核心）
+├── paymentService.charge (PaymentService.java:21)（核心）
 │   └── okhttp3:execute（[外部] — POST /api/charge）
-└── notifyUser（核心）
+└── notifyUser (NotificationService.java:15)（核心）
     └── sendEmail（[外部] — javax.mail:send）
 ```
 
-- 首行为入口函数，向下逐层缩进
-- 中间节点标注分类，叶子节点标注状态标记
-- SQL 节点用 `{xml}:{行号} — SQL正文`，脚本命令用 `{file}:{行号} $ 命令`
+- 每个函数标注 `{文件}:{行号}`，项目函数和 XML mapper 都标注
+- 中间节点标注分类，外部节点标注 `[外部]`
 
 ### 叶子核心目标
 
