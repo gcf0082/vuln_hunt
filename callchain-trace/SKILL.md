@@ -5,7 +5,7 @@ description: 仅在用户显式指名调用 callchain-trace 时触发。
 
 # 核心任务
 
-从入口出发，沿调用链只追踪业务强相关函数，输出可㤼是核心但无法继续追踪的函数列表。
+从入口出发，沿调用链只追踪业务强相关函数，输出调用树，直达外部函数边界。
 
 ## 输入处理
 
@@ -48,9 +48,9 @@ description: 仅在用户显式指名调用 callchain-trace 时触发。
 
 ## 跟踪流程
 
-从入口函数开始，递归追踪核心函数调用链，直到遇到无法继续的情形（外部库/无源码/接口多实现无法确定/环），将这些函数记录为"可能是核心但无法追踪"。
+从入口函数开始，递归追踪核心函数调用链，核心的继续展开，遇到无法继续的（外部库/多态/环）在树上标注状态。
 
-预期链形：入口 → 核心 → ... → 核心 → 无法追踪（外部/多态/闭环）
+预期链形：入口 → 核心 → ... → 核心 → [外部]/[多态]/[闭环]
 
 ### 接口/抽象方法处理
 
@@ -65,14 +65,24 @@ description: 仅在用户显式指名调用 callchain-trace 时触发。
 
 ## 输出格式
 
-表格列出可能是核心但无法继续追踪的函数：
+### 调用树
 
-| 函数 | 位置 | 原因 |
-|---|---|---|
-| `PaymentService.charge` | `PaymentService.java:21` | 接口多实现，无法确定具体实现 |
-| `okhttp3:execute` | `POST /api/charge` | 外部库，无源码 |
+按层级缩进展示每个函数的调用顺序：
 
-原因包括：外部库无源码、接口多实现无法确定、检测到环、项目中找不到定义。
+```
+### 树 1：主流程
+processOrder (OrderController.java:32)
+├── calculateAmount (OrderService.java:58)（核心）
+│   └── OrderMapper.xml:47 — SELECT * FROM orders WHERE id = #{id}
+├── paymentService.charge (PaymentService.java:21)（[多态] — 2个实现）
+│   └── okhttp3:execute（[外部] — POST /api/charge）
+└── notifyUser (NotificationService.java:15)（核心）
+    └── sendEmail（[外部] — javax.mail:send）
+```
+
+- 每个节点标注 `文件名:行号`
+- 项目内可继续追踪的标注（核心），无法追踪的标注 `[外部]`/`[多态]`/`[闭环]`
+- 默认一棵树，特别复杂时才拆多棵树
 
 ## 质量纪律
 
