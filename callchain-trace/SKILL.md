@@ -81,7 +81,7 @@ processOrder (OrderController.java:32)
 ```
 
 - 每个节点标注 `文件名:行号`，外部库函数只标函数名
-- 只展示核心路径，非核心函数不出现；纯 getter/setter、简单 put 转发、空实现等自动跳过
+- 只展示核心路径，非核心函数不出现；纯 getter/setter、简单 put 转发、HashMap.get 等标准库数据访问、空实现等自动跳过
 - 默认一棵树，特别复杂时才拆多棵树
 
 ## 质量纪律
