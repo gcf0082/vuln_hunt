@@ -1,0 +1,38 @@
+### 问题 1
+
+- **类型**：路径遍历
+- **位置**：第10行和第14行（`code_path = pathlib.Path(args.code_file).resolve()` 和 `lines = code_path.read_text(...)`）
+- **严重度**：高
+- **描述**：用户通过 `--code-file` 参数直接指定任意文件路径，脚本未做任何路径限制或白名单检查，直接读取该文件内容并传递给子进程。攻击者可以读取系统任意文件（如 `/etc/shadow`、`/etc/passwd` 等），导致敏感信息泄露。
+- **攻击向量**：执行脚本时传入 `--code-file /etc/shadow`，脚本会读取 `/etc/shadow` 内容并发送给子进程，子进程的输出可能被写入输出文件或显示。
+- **修复建议**：限制 `--code-file` 只能接受指定目录下的文件（如项目源码目录），或使用 `pathlib.Path.resolve()` 后检查路径是否在允许的基目录内。示例：
+  ```python
+  allowed_base = pathlib.Path("/allowed/project/dir").resolve()
+  code_path = pathlib.Path(args.code_file).resolve()
+  if not str(code_path).startswith(str(allowed_base)):
+      sys.exit("Error: code-file must be under allowed directory")
+  ```
+
+### 问题 2
+
+- **类型**：路径遍历
+- **位置**：第11行和第26行（`prompt_path = pathlib.Path(args.prompt_file).resolve()` 和 `subprocess.run` 中 `str(prompt_path)` 作为参数）
+- **严重度**：高
+- **描述**：用户通过 `--prompt-file` 参数指定任意文件路径，脚本未做限制，直接将该路径传递给子进程 `llm_prompt_cli.py`。子进程会读取该文件内容作为提示，攻击者可以读取系统任意文件，导致敏感信息泄露。
+- **攻击向量**：执行脚本时传入 `--prompt-file /etc/shadow`，子进程读取 `/etc/shadow` 内容并可能输出到结果中。
+- **修复建议**：同问题1，对 `--prompt-file` 参数进行路径白名单限制，或确保文件仅来自安全目录。
+
+### 问题 3
+
+- **类型**：路径遍历
+- **位置**：第23行和第30行（`out = pathlib.Path(args.output_dir) / f"{rel}.txt"` 和 `out.write_text(...)`）
+- **严重度**：中
+- **描述**：用户通过 `--output-dir` 参数控制输出目录，脚本未做任何限制，直接拼接路径并写入文件。攻击者可以指定任意目录（如 `/etc/cron.d/` 或 `/tmp/` 下的敏感位置），导致覆盖重要文件或写入恶意内容（如 crontab 任务）。
+- **攻击向量**：执行脚本时传入 `--output-dir /etc/cron.d/`，输出文件名由 `rel` 决定（例如 `passwd.txt`），从而写入 `/etc/cron.d/passwd.txt`，可能被 cron 执行。
+- **修复建议**：限制输出目录为固定安全目录（如当前目录下的 `output` 子目录），或对 `--output-dir` 进行路径白名单检查。示例：
+  ```python
+  allowed_output = pathlib.Path.cwd() / "output"
+  out_dir = pathlib.Path(args.output_dir).resolve()
+  if not str(out_dir).startswith(str(allowed_output)):
+      sys.exit("Error: output-dir must be under ./output")
+  ```
