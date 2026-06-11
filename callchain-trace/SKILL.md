@@ -3,7 +3,7 @@ name: callchain-trace
 description: 仅在用户显式指名调用 callchain-trace 时触发。
 ---
 
-# callchain-trace
+# 核心任务
 
 核心任务：从入口出发，沿调用链只追踪业务强相关函数，忽略判空/校验/日志，按调用时序输出调用树，直达外部函数边界。
 
