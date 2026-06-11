@@ -80,13 +80,16 @@ description: 仅在用户显式指名调用 callchain-trace 时触发。
 按层级缩进展示，每层一个函数。格式规则：
 
 ```
-### 树 N：{标题 / 分叉条件}
-入口函数
-├── 业务函数（核心）
-│   ├── OrderMapper.xml:47 — SELECT * FROM ...
-│   └── deploy.sh:5 $ git pull origin main
-├── 工具函数（[跳过]）
-└── 接口方法（[多态] — 找到 2 个实现）
+### 树 1：主流程
+processOrder
+├── validateInput（[跳过] — 空值校验）
+├── calculateAmount（核心）
+│   └── OrderMapper.xml:47 — SELECT * FROM orders WHERE id = #{id}
+├── auditLog（[跳过] — 日志记录）
+├── paymentService.charge（核心）
+│   └── okhttp3:execute（[外部] — POST /api/charge）
+└── notifyUser（核心）
+    └── sendEmail（[外部] — javax.mail:send）
 ```
 
 - 首行为入口函数，向下逐层缩进
