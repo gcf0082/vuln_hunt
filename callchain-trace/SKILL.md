@@ -84,7 +84,7 @@ processOrder (OrderController.java:32)
     └── sendEmail（[外部] — javax.mail:send）
 ```
 
-- 每个函数标注 `{文件}:{行号}`，项目函数和 XML mapper 都标注
+- 每个节点标注项目相对路径 `{文件}:{行号}`，项目函数和 XML mapper 都标注
 - 中间节点标注分类，外部节点标注 `[外部]`
 
 ## 质量纪律
