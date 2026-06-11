@@ -82,10 +82,8 @@ description: 仅在用户显式指名调用 callchain-trace 时触发。
 ```
 ### 树 1：主流程
 processOrder
-├── validateInput（[跳过] — 空值校验）
 ├── calculateAmount（核心）
 │   └── OrderMapper.xml:47 — SELECT * FROM orders WHERE id = #{id}
-├── auditLog（[跳过] — 日志记录）
 ├── paymentService.charge（核心）
 │   └── okhttp3:execute（[外部] — POST /api/charge）
 └── notifyUser（核心）
