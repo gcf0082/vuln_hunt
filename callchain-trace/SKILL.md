@@ -69,7 +69,7 @@ description: 仅在用户显式指名调用 callchain-trace 时触发。
 
 | 函数 | 位置 | 原因 |
 |---|---|---|
-| `PaymentService.charge` | `src/main/java/com/example/PaymentService.java:21` | 接口多实现，无法确定具体实现 |
+| `PaymentService.charge` | `PaymentService.java:21` | 接口多实现，无法确定具体实现 |
 | `okhttp3:execute` | `POST /api/charge` | 外部库，无源码 |
 
 原因包括：外部库无源码、接口多实现无法确定、检测到环、项目中找不到定义。
