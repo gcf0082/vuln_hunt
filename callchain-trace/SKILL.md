@@ -48,9 +48,9 @@ description: 仅在用户显式指名调用 callchain-trace 时触发。
 
 ## 跟踪流程
 
-从入口函数开始，递归追踪核心函数调用链，核心的继续展开，遇到无法继续的（外部库/多态/环）在树上标注状态。
+从入口函数开始，递归追踪核心函数调用链，核心的继续展开，遇到无法继续的（外部库/多态/环）停止。
 
-预期链形：入口 → 核心 → ... → 核心 → [外部]/[多态]/[闭环]
+预期链形：入口 → 核心 → ... → 核心 → 外部函数
 
 ### 接口/抽象方法处理
 
@@ -72,21 +72,19 @@ description: 仅在用户显式指名调用 callchain-trace 时触发。
 ```
 ### 树 1：主流程
 processOrder (OrderController.java:32)
-├── calculateAmount (OrderService.java:58)（核心）
+├── calculateAmount (OrderService.java:58)
 │   └── OrderMapper.xml:47 — SELECT * FROM orders WHERE id = #{id}
-├── paymentService.charge (PaymentService.java:21)（[多态] — 2个实现）
-│   └── okhttp3:execute（[外部] — POST /api/charge）
-└── notifyUser (NotificationService.java:15)（核心）
-    └── sendEmail（[外部] — javax.mail:send）
+├── paymentService.charge (PaymentService.java:21)
+│   └── okhttp3:execute
+└── notifyUser (NotificationService.java:15)
+    └── sendEmail
 ```
 
-- 每个节点标注 `文件名:行号`
-- 项目内可继续追踪的标注（核心），无法追踪的标注 `[外部]`/`[多态]`/`[闭环]`
+- 每个节点标注 `文件名:行号`，外部库函数只标函数名
+- 只展示核心路径，非核心函数不出现
 - 默认一棵树，特别复杂时才拆多棵树
 
 ## 质量纪律
 
-- **不编造**：搜不到定义的调用标记原因，不臆测
-- **不漏记**：核心路径中碰到的无法追踪函数全部列出
-- **环必检**：路径中检测到重复函数立即停止并记录
-- **多态不静默**：接口/抽象方法调用无法确定实现时须记录
+- **不编造**：搜不到定义的调用直接停止，不拼凑实现体
+- **环必检**：路径中检测到重复函数立即停止
