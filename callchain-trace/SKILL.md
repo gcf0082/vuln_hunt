@@ -87,24 +87,10 @@ processOrder (OrderController.java:32)
 - 每个函数标注 `{文件}:{行号}`，项目函数和 XML mapper 都标注
 - 中间节点标注分类，外部节点标注 `[外部]`
 
-### 叶子核心目标
-
-表格汇总两类核心终点：
-
-| 核心目标 | 说明 |
-|---|---|
-| `OrderMapper.xml:47` | `SELECT * FROM orders WHERE id = #{id}` |
-| `deploy.sh:5` | git pull origin main |
-| `deploy.sh:12` | cp target/app.jar /usr/local/app/ |
-| `okhttp3:execute` | POST /api/payment |
-| `jakarta.validation:validate()` | 外部 check，项目未重写 |
-
-第一类：文件/命令/SQL/网络操作，第二类：check 类外部函数。同一条核心分支以最外层操作为准。
-
 ## 质量纪律
 
 - **不编造**：搜不到定义的调用标记边界，不臆测实现体
-- **不漏记**：函数体中每个出现的外部调用要么展开到底，要么在调用树上标注状态；仅在叶子汇总中筛选核心路径终点
+- **不漏记**：函数体中每个出现的外部调用要么展开到底，要么在调用树上标注状态
 - **环必检**：路径中检测到重复函数立即停止并标注
 - **签名完整**：每个函数标注 `{文件名:行号}`，便于验证
 - **多态不静默**：接口/抽象方法调用必须有去向说明（具体实现 / 边界 / 标注无法确定）
