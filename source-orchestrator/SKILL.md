@@ -1,7 +1,6 @@
 ---
 name: source-orchestrator
 description: 仅在用户显式指名调用 source-orchestrator 时触发，不要因模糊意图主动触发。
-argument-hint: [--project <name>]
 ---
 
 # source-orchestrator
@@ -11,28 +10,23 @@ argument-hint: [--project <name>]
 - **本 skill 做**：按顺序触发子 skill，每阶段 5 并发
 - **本 skill 不做**：状态文件、断点续跑、失败重试、复杂汇报 —— 子 skill 失败就跳过该项
 
-## 项目参数
-
-从调用消息提取 `project_name`。未指定时 `project_name = "default_proj"`。
-透传给各子 skill。
-
 ## 流水线
 
 ```
 [0] source-collect
-    → .vuln_agent_output/{project_name}/discovered_surfaces/（递归 .md）
+    → discovered_surfaces/（递归 .md）
 [1] source-analyze  (每条目 5 并发)
-    → .vuln_agent_output/{project_name}/analyzed_surfaces/（递归 .md）
+    → analyzed_surfaces/（递归 .md）
 [2] source-analyze-vuln  (每条目 5 并发)
-    → .vuln_agent_output/{project_name}/vuln_findings/（递归 .md）
+    → vuln_findings/（递归 .md）
 [3] source-review  (每条目 5 并发)
-    → .vuln_agent_output/{project_name}/vuln_reviews/（递归 .md）
+    → vuln_reviews/（递归 .md）
 ```
 
-**产物**统一在 `.vuln_agent_output/{project_name}/` 下（当前工作目录视为被扫描项目根）：
+**产物**统一在 `.vuln_agent_output/` 下（当前工作目录视为被扫描项目根）：
 
 ```
-.vuln_agent_output/{project_name}/
+.vuln_agent_output/
 ├── discovered_surfaces/      ← 可含子目录（如 REST/、MQ/）
 ├── analyzed_surfaces/        ← 镜像输入子目录结构
 ├── vuln_findings/            ← 镜像输入子目录结构
@@ -57,45 +51,41 @@ argument-hint: [--project <name>]
 subagent: source-collector
 prompt: 调用 source-collect skill
         - work_dir: .
-        - project_name: {project_name}
-        产物: .vuln_agent_output/{project_name}/discovered_surfaces/
-        完成信号: .vuln_agent_output/{project_name}/.collect_done
+        产物: .vuln_agent_output/discovered_surfaces/
+        完成信号: .vuln_agent_output/.collect_done
 ```
 
 **Stage 1**（每 surface 一个，5 并发）：
 ```
-递归读 .vuln_agent_output/{project_name}/discovered_surfaces/ 下所有 .md 得到 slug 列表
+递归读 discovered_surfaces/ 下所有 .md 得到 slug 列表
 对每个 slug 同时派发（一次 LLM 响应中发 ≤5 个 task）：
   subagent: source-analyst
   prompt: 调用 source-analyze skill
           - work_dir: .
-          - project_name: {project_name}
           - surface_file: {slug 相对路径，如 REST/iface-REST-user-list-0608-021435.md}
-          产物: .vuln_agent_output/{project_name}/analyzed_surfaces/{slug 相对路径}
+          产物: analyzed_surfaces/{slug 相对路径}
 ```
 
 **Stage 2**（每 analyzed surface 一个，5 并发）：
 ```
-递归读 .vuln_agent_output/{project_name}/analyzed_surfaces/ 下所有 .md 得到 stem 列表
+递归读 analyzed_surfaces/ 下所有 .md 得到 stem 列表
 对每个 stem 同时派发：
   subagent: source-vulnerability-analyst
   prompt: 调用 source-analyze-vuln skill
           - work_dir: .
-          - project_name: {project_name}
-          - input: .vuln_agent_output/{project_name}/analyzed_surfaces/{stem 相对路径}
-          产物: .vuln_agent_output/{project_name}/vuln_findings/{子目录/}{stem}-{n}.md
+          - input: analyzed_surfaces/{stem 相对路径}
+          产物: vuln_findings/{子目录/}{stem}-{n}.md
 ```
 
 **Stage 3**（每 finding 一个，5 并发）：
 ```
-递归读 .vuln_agent_output/{project_name}/vuln_findings/ 下所有 .md 得到 stem 列表
+递归读 vuln_findings/ 下所有 .md 得到 stem 列表
 对每个 stem 同时派发：
   subagent: source-re-analyzer
   prompt: 调用 source-review skill
           - work_dir: .
-          - project_name: {project_name}
-          - input: .vuln_agent_output/{project_name}/vuln_findings/{stem 相对路径}
-          产物: .vuln_agent_output/{project_name}/vuln_reviews/{子目录/}{stem}.md
+          - input: vuln_findings/{stem 相对路径}
+          产物: vuln_reviews/{子目录/}{stem}.md
 ```
 
 **5 并发的实现**：在同一次 LLM 响应中发起 ≤5 个 `task` 调用 → 等所有返回 → 解析结果 → 进入下一批。
@@ -110,7 +100,7 @@ prompt: 调用 source-collect skill
 - 分析完成: A/B（失败: 失败项列表）
 - 漏洞 finding: C/D
 - 复核完成: E/F
-- 产物: .vuln_agent_output/{project_name}/
+- 产物: .vuln_agent_output/
 ```
 
 不写状态文件，不做断点续跑 —— 中途断了用户重跑即可。
@@ -126,4 +116,5 @@ prompt: 调用 source-collect skill
 - **不改子 skill**：不修改 4 个子 skill 的任何 `SKILL.md`
 - **不动源**：本 skill 不修改被扫描项目的任何源文件
 - **幂等**：重复跑会基于子 skill 自身的产物策略（覆盖 / 追加 / 清空）行为
-- **不动目标分析目录**：所有产物、临时文件、临时脚本**只能**写到 `.vuln_agent_output/{project_name}/` 下，**不得**在被分析项目源码目录里写任何文件
+- **不动目标分析目录**：所有产物、临时文件、临时脚本**只能**写到 `.vuln_agent_output/` 下，**不得**在被分析项目源码目录里写任何文件
+

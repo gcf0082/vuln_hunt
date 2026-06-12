@@ -1,7 +1,6 @@
 ---
 name: vuln-dispatch
 description: 仅在用户显式指名调用 vuln-dispatch 时触发，不要因模糊意图主动触发。
-argument-hint: [--project <name>]
 ---
 
 # vuln-dispatch
@@ -10,17 +9,12 @@ argument-hint: [--project <name>]
 
 **绝不读源码、绝不分析代码、绝不写文件。只做派发。**
 
-## 项目参数
-
-从 `$ARGUMENTS` 解析 `--project <name>`。未指定时 `project_name = "default_proj"`。
-透传给 orchestrator：**项目名称**: {project_name}
-
 ## 步骤
 
 1. 读用户消息
 2. 识别意图
-3. 扫攻击面 / 找入口 → 调 `source-orchestrator`，透传用户原消息（含项目名称）
-4. 查危险点 / 找 sink → 调 `sink-orchestrator`，透传用户原消息（含项目名称）
+3. 扫攻击面 / 找入口 → 调 `source-orchestrator`，透传用户原消息
+4. 查危险点 / 找 sink → 调 `sink-orchestrator`，透传用户原消息
 5. 两种意图都看得出 → **source 优先**
 6. 完全识别不出 → 反问「扫攻击面（source）还是查危险点（sink）？」
 

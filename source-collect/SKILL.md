@@ -1,7 +1,6 @@
 ---
 name: source-collect
 description: 按用户指令收集并落盘暴露面。
-argument-hint: [--project <name>]
 ---
 
 # source-collect
@@ -15,10 +14,10 @@ skill 不是"输入→文件"的转换器，而是**带收集能力的执行器*
 
 ## 路径约定
 
-本 skill 涉及的所有目录**统一在 `.vuln_agent_output/{project_name}/` 下**。项目名称通过 `--project <name>` 指定，未指定时默认为 `default_proj`。`{project_name}` 替换为实际值。当前工作目录视为被分析项目根：
+本 skill 涉及的所有目录**统一在 `.vuln_agent_output/` 下**，当前工作目录视为被分析项目根：
 
 ```
-.vuln_agent_output/{project_name}/
+.vuln_agent_output/
 ├── discovered_surfaces/                  ← 输出
 ├── meta/
 │   └── error/source-collect.md           ← 失败日志
@@ -159,7 +158,7 @@ REST 分类的成品文件，照着写就行。其它分类参考「按分类的
    - 各类别（iface/noniface、REST/SCRIPT/...）的数量分布
    - 每个生成文件的路径
    - 收集过程中遇到的歧义或可疑点（让用户决定是否补做）
-9. **写入完成信号**：在 `.vuln_agent_output/{project_name}/.collect_done` 创建一个**空文件**，作为本次收集完成的标记。**只在所有文件落盘、自检通过后**才写；如果中途出错，**不**写这个文件，让下游能区分"完成"和"未完成"
+9. **写入完成信号**：在 `.vuln_agent_output/.collect_done` 创建一个**空文件**，作为本次收集完成的标记。**只在所有文件落盘、自检通过后**才写；如果中途出错，**不**写这个文件，让下游能区分"完成"和"未完成"
 
 ## 完成自检
 
@@ -203,10 +202,10 @@ REST 分类的成品文件，照着写就行。其它分类参考「按分类的
 
 本 skill 的产物是后续漏洞分析 skill 的输入，对接约定：
 
-- **产物位置**：`.vuln_agent_output/{project_name}/discovered_surfaces/` 下所有 `*.md` 文件
-- **完成信号**：`.vuln_agent_output/{project_name}/.collect_done` 空文件，**存在 = 本次收集成功完成**；**不存在 = 未完成或失败**，下游先看这个文件再决定是否读 surfaces
+- **产物位置**：`.vuln_agent_output/discovered_surfaces/` 下所有 `*.md` 文件
+- **完成信号**：`.vuln_agent_output/.collect_done` 空文件，**存在 = 本次收集成功完成**；**不存在 = 未完成或失败**，下游先看这个文件再决定是否读 surfaces
 - **文件形态**：每个暴露面一个独立 markdown，可被任意下游 skill 独立读取
 - **幂等性**：每次运行前必须询问用户选择处理策略（清空 / 覆盖 / 追加），不替用户决定；选完后行为可预期，重复运行结果由策略决定
 - **不修改源**：本 skill 不改任何源文件，只读 + 写新文件
-- **不动目标分析目录**：所有产物、临时文件、临时脚本**只能**写到 `.vuln_agent_output/{project_name}/` 下，**不得**在被分析项目源码目录里写任何文件
+- **不动目标分析目录**：所有产物、临时文件、临时脚本**只能**写到 `.vuln_agent_output/` 下，**不得**在被分析项目源码目录里写任何文件
 

@@ -1,7 +1,6 @@
 ---
 name: sink-orchestrator
 description: 仅在用户显式指名调用 sink-orchestrator 时触发，不要因模糊意图主动触发。
-argument-hint: [--project <name>]
 ---
 
 # sink-orchestrator
@@ -11,26 +10,21 @@ argument-hint: [--project <name>]
 - **本 skill 做**：按顺序触发子 skill，每阶段 5 并发
 - **本 skill 不做**：状态文件、断点续跑、失败重试、复杂汇报 —— 子 skill 失败就跳过该项
 
-## 项目参数
-
-从调用消息提取 `project_name`。未指定时 `project_name = "default_proj"`。
-透传给各子 skill。
-
 ## 流水线
 
 ```
 [0] sink-collect                 (单次)
-    → .vuln_agent_output/{project_name}/sink_list/（递归 .md）
+    → sink_list/（递归 .md）
 [1] sink-analyze-vuln  (每条目 5 并发)
-    → .vuln_agent_output/{project_name}/sink_findings/（递归 .md）
+    → sink_findings/（递归 .md）
 [2] sink-review   (每条目 5 并发)
-    → .vuln_agent_output/{project_name}/sink_reviews/（递归 .md）
+    → sink_reviews/（递归 .md）
 ```
 
-**产物**统一在 `.vuln_agent_output/{project_name}/` 下（当前工作目录视为被扫描项目根）：
+**产物**统一在 `.vuln_agent_output/` 下（当前工作目录视为被扫描项目根）：
 
 ```
-.vuln_agent_output/{project_name}/
+.vuln_agent_output/
 ├── sink_list/                 ← 可含子目录（如 sql/、cmd/）
 ├── sink_findings/             ← 镜像输入子目录结构
 ├── sink_reviews/              ← 镜像输入子目录结构
@@ -60,33 +54,30 @@ scope 隐式默认当前项目目录，**不**反问。
 subagent: sink-collector
 prompt: 调用 sink-collect skill
         - work_dir: .
-        - project_name: {project_name}
         - user_intent: {用户给的 sink 类型}
-        产物: .vuln_agent_output/{project_name}/sink_list/
+        产物: .vuln_agent_output/sink_list/
 ```
 
 **Stage 1**（每 sink 一个，5 并发）：
 ```
-递归读 .vuln_agent_output/{project_name}/sink_list/ 下所有 .md 得到 sink 列表
+递归读 sink_list/ 下所有 .md 得到 sink 列表
 对每个 sink 同时派发（一次 LLM 响应中发 ≤5 个 task）：
   subagent: sink-vulnerability-analyst
   prompt: 调用 sink-analyze-vuln skill
           - work_dir: .
-          - project_name: {project_name}
           - sink_file: {sink 相对路径，如 sql/sql-user-query-0608-021435.md}
-          产物: .vuln_agent_output/{project_name}/sink_findings/{子目录/}{stem}-{n}.md
+          产物: sink_findings/{子目录/}{stem}-{n}.md
 ```
 
 **Stage 2**（每 finding 一个，5 并发）：
 ```
-递归读 .vuln_agent_output/{project_name}/sink_findings/ 下所有 .md 得到 stem 列表
+递归读 sink_findings/ 下所有 .md 得到 stem 列表
 对每个 stem 同时派发：
   subagent: sink-re-analyzer
   prompt: 调用 sink-review skill
           - work_dir: .
-          - project_name: {project_name}
-          - sink_finding_file: .vuln_agent_output/{project_name}/sink_findings/{stem 相对路径}
-          产物: .vuln_agent_output/{project_name}/sink_reviews/{子目录/}{stem}.md
+          - sink_finding_file: sink_findings/{stem 相对路径}
+          产物: sink_reviews/{子目录/}{stem}.md
 ```
 
 **5 并发的实现**：在同一次 LLM 响应中发起 ≤5 个 `task` 调用 → 等所有返回 → 解析结果 → 进入下一批。
@@ -100,7 +91,7 @@ prompt: 调用 sink-collect skill
 - sink 列表: X 个
 - 漏洞 finding: A/B
 - 复核完成: C/D
-- 产物: .vuln_agent_output/{project_name}/
+- 产物: .vuln_agent_output/
 ```
 
 不写状态文件，不做断点续跑 —— 中途断了用户重跑即可。
@@ -116,4 +107,4 @@ prompt: 调用 sink-collect skill
 - **不改子 skill**：不修改 sink-collect / sink-analyze-vuln / sink-review 的任何 `SKILL.md`
 - **不动源**：本 skill 不修改被扫描项目的任何源文件
 - **幂等**：重复跑会基于子 skill 自身的产物策略（覆盖 / 追加 / 清空）行为
-- **不动目标分析目录**：所有产物、临时文件、临时脚本**只能**写到 `.vuln_agent_output/{project_name}/` 下，**不得**在被分析项目源码目录里写任何文件
+- **不动目标分析目录**：所有产物、临时文件、临时脚本**只能**写到 `.vuln_agent_output/` 下，**不得**在被分析项目源码目录里写任何文件
