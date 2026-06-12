@@ -67,6 +67,7 @@ subagent: {sink-orchestrator | source-orchestrator}
 prompt: 调用 {sink-orchestrator | source-orchestrator} skill
         - work_dir: .
         - task: {用户原始任务描述}
+        - vuln_type: {vuln_type，如 cmd/sql}
         产物: .vuln_agent_output/{sink_list/ | discovered_surfaces/} + ...
 ```
 
@@ -76,6 +77,7 @@ subagent: {source-orchestrator | sink-orchestrator}
 prompt: 调用 {source-orchestrator | sink-orchestrator} skill
         - work_dir: .
         - task: {用户原始任务描述}
+        - vuln_type: {vuln_type，如 cmd/sql}
         产物: .vuln_agent_output/{discovered_surfaces/ | sink_list/} + ...
 ```
 

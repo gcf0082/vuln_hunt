@@ -39,6 +39,7 @@ description: 仅在用户显式指名调用 sink-orchestrator 时触发，不要
 
 用户调用 `sink-orchestrator` 时，从用户消息中识别 sink 类型。**已包含的不反问，只反问确实缺失的**：
 
+- 调用方已指定 `vuln_type`（如 cmd/sql）→ 直接透传给 sink-collect，不反问
 - 用户已指明 sink 类型（如"扫 SQL 和命令执行"）→ 透传给 sink-collect
 - 用户没说具体类型 → 反问"重点关注哪些 sink 类型？如 SQL / 命令 / 文件 / 网络 / 反序列化 / 弱加密（不选则全扫）"，选后透传
 - 用户说"全部" / 没说且反问后仍没选 → 透传 all，sink-collect 全扫
@@ -51,10 +52,11 @@ scope 隐式默认当前项目目录，**不**反问。
 
 **Stage 0**（单次）：
 ```
-subagent: sink-collector
+  subagent: sink-collector
 prompt: 调用 sink-collect skill
         - work_dir: .
         - user_intent: {用户给的 sink 类型}
+        - vuln_type: {vuln_type，如 cmd/sql}
         产物: .vuln_agent_output/sink_list/
 ```
 

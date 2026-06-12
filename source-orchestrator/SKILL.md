@@ -76,6 +76,7 @@ prompt: 调用 source-collect skill
   prompt: 调用 source-analyze-vuln skill
           - work_dir: .
           - task: {用户原始任务描述}
+          - vuln_type: {vuln_type，如 cmd/sql/path_traversal}
           - input: analyzed_surfaces/{stem 相对路径}
           产物: vuln_findings/{子目录/}{stem}-{n}.md
 ```
