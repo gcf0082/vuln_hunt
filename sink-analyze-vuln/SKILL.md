@@ -1,9 +1,9 @@
 ---
-name: sink-analyze-vulnerability
-description: 仅在用户显式指名调用 sink-analyze-vulnerability 时触发，不要因模糊意图主动触发。
+name: sink-analyze-vuln
+description: 仅在用户显式指名调用 sink-analyze-vuln 时触发，不要因模糊意图主动触发。
 ---
 
-# sink-analyze-vulnerability
+# sink-analyze-vuln
 
 ## 定位
 
@@ -23,7 +23,7 @@ skill 根据用户任务做 sink 点漏洞分析，输入是 `sink_list/` 下的
 ├── sink_findings/                        ← 输出（产物落盘位置，镜像输入子目录结构）
 ├── meta/
 │   ├── batches/{sink_stem}/              ← 复杂 sink 子任务中间产物
-│   └── error/sink-analyze-vulnerability.md ← 失败日志
+│   └── error/sink-analyze-vuln.md ← 失败日志
 └── temp/
     └── scripts/                          ← 临时脚本（用完即弃）
 ```
@@ -203,7 +203,7 @@ sink 函数位置（文件:行号）
 - **不动源**：不修改任何源文件、配置文件
 - **按需分配**：根据用户任务和 sink 复杂度灵活处理单条或多条
 - **保留产物对应关系（含时间戳）**：输出文件名 = 输入文件名 stem（含 MMDD-HHMMSS 时间戳）+ 编号后缀，仅目录从 `sink_list/` 变成 `sink_findings/`；输入在子目录中的，产物镜像同一子目录结构（如 `sink_list/sql/X.md` → `sink_findings/sql/VULN-X-1.md`）
-- **失败显式标注**：走不通就显式标注、写进 `.vuln_agent_output/meta/error/sink-analyze-vulnerability.md`
+- **失败显式标注**：走不通就显式标注、写进 `.vuln_agent_output/meta/error/sink-analyze-vuln.md`
 - **不动目标分析目录**：所有产物、临时文件、临时脚本**只能**写到 `.vuln_agent_output/` 下，**不得**在被分析项目源码目录里写任何文件
 - **不要去掉时间戳**：上一 stage 文件名带的 MMDD-HHMMSS 时间戳是跨 stage 追溯的关键锚点，禁止在产物命名中省略
 

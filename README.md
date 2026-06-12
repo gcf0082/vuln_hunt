@@ -32,8 +32,6 @@
 
 ### 通用辅助
 
-- `source-plan-vuln-tasks`：基于攻击面分析结果规划漏洞分析任务（已从流水线移除，代码保留）
-
 ## Skill 总览
 
 | Skill | 模式 | 触发 | 作用 |
@@ -43,7 +41,6 @@
 | `source-analyze-vuln/` | source | 显式调用 | 漏洞分析（4 档：VULN / DISMISSED / CLEAN / SUSPECTED）|
 | `source-review/` | source | 显式调用 | 复核漏洞结论（VULN / NOVULN / SUSPECTED）|
 | `source-orchestrator/` | source 编排 | 显式调用 | 编排 source 流水线（4 stage，5 并发）|
-| `source-plan-vuln-tasks/` | source | 显式调用 | 已从流水线移除，代码保留 |
 | `sink-collect/` | sink | 显式调用 | 采集 sink 列表，按统一格式落盘 |
 | `sink-analyze-vuln/` | sink | 显式调用 | sink-based 反向数据流漏洞分析 |
 | `sink-review/` | sink | 显式调用 | 复核 sink-based 漏洞结论 |
@@ -57,7 +54,6 @@
 .vuln_agent_output/
 ├── discovered_surfaces/       ← source 阶段 0 产物
 ├── analyzed_surfaces/         ← source 阶段 1 产物
-├── planned_vuln_tasks/        ← source-plan-vuln-tasks 产物（已从流水线移除）
 ├── vuln_findings/             ← source 阶段 2 产物
 ├── vuln_reviews/              ← source 阶段 3 产物
 ├── sink_list/                 ← sink 阶段 0 产物
@@ -69,7 +65,7 @@
 
 ## 默认行为约定
 
-后续每个下游分析 skill（source-analyze / source-analyze-vuln / source-review / sink-analyze-vuln / sink-review / source-plan-vuln-tasks）遵循同一默认约定：
+后续每个下游分析 skill（source-analyze / source-analyze-vuln / source-review / sink-analyze-vuln / sink-review）遵循同一默认约定：
 
 - **用户没指定文件** → 默认处理上一 stage 产物目录下所有 `*.md`，无需反问
 - **用户指定了文件** → 处理指定文件

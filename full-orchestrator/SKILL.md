@@ -7,8 +7,8 @@ description: 仅在用户显式指名调用 full-orchestrator 时触发，不要
 
 默认先跑 sink 管道再跑 source 管道，最后合并结果。支持 `--order source-first` 切换为先 source 后 sink。
 
-- **本 skill 做**：按顺序触发 sink-orchestrator → source-orchestrator → vuln-merge（或 source-first 变体）
-- **本 skill 不做**：状态文件、断点续跑、失败重试、复杂汇报 —— 子 skill 失败就跳过该项
+- **本 skill 做**：按顺序触发 sink-orchestrator → source-orchestrator → vuln-merger（或 source-first 变体）
+- **本 skill 不做**：状态文件、断点续跑、失败重试、复杂汇报 —— 子 agent 失败就跳过该项
 
 ## 流水线
 
@@ -18,7 +18,7 @@ description: 仅在用户显式指名调用 full-orchestrator 时触发，不要
     → sink_list/ → sink_findings/ → sink_reviews/
 [1] source-orchestrator
     → discovered_surfaces/ → analyzed_surfaces/ → vuln_findings/ → vuln_reviews/
-[2] vuln-merge
+[2] vuln-merger
     → merged_findings/
 ```
 
@@ -28,7 +28,7 @@ description: 仅在用户显式指名调用 full-orchestrator 时触发，不要
     → discovered_surfaces/ → analyzed_surfaces/ → vuln_findings/ → vuln_reviews/
 [1] sink-orchestrator
     → sink_list/ → sink_findings/ → sink_reviews/
-[2] vuln-merge
+[2] vuln-merger
     → merged_findings/
 ```
 
@@ -64,7 +64,7 @@ description: 仅在用户显式指名调用 full-orchestrator 时触发，不要
 **Stage 0**（单次，默认 sink / source-first 时 source）：
 ```
 subagent: {sink-orchestrator | source-orchestrator}
-prompt: 调用 {sink-orchestrator | source-orchestrator} skill
+prompt: 按 {sink-orchestrator | source-orchestrator} agent 的职责执行
         - work_dir: .
         - task: {用户原始任务描述}
         - vuln_type: {vuln_type，如 cmd/sql}
@@ -74,7 +74,7 @@ prompt: 调用 {sink-orchestrator | source-orchestrator} skill
 **Stage 1**（单次，另一个管道）：
 ```
 subagent: {source-orchestrator | sink-orchestrator}
-prompt: 调用 {source-orchestrator | sink-orchestrator} skill
+prompt: 按 {source-orchestrator | sink-orchestrator} agent 的职责执行
         - work_dir: .
         - task: {用户原始任务描述}
         - vuln_type: {vuln_type，如 cmd/sql}
@@ -84,7 +84,7 @@ prompt: 调用 {source-orchestrator | sink-orchestrator} skill
 **Stage 2**（单次）：
 ```
 subagent: vuln-merger
-prompt: 调用 vuln-merge skill
+prompt: 按 vuln-merger agent 的职责执行
         - work_dir: .
         - task: {用户原始任务描述}
         输入: .vuln_agent_output/vuln_findings/ + .vuln_agent_output/sink_findings/
@@ -107,11 +107,11 @@ prompt: 调用 vuln-merge skill
 
 ## 失败处理
 
-- **子 skill 失败**：跳过该项，继续跑其他项，最终报告里列出失败项
+- **子 agent 失败**：跳过该项，继续跑其他项，最终报告里列出失败项
 - **不重试**：失败就失败，简化逻辑
 
 ## 原则
 
-- **不改子 skill**：不修改 sink-orchestrator / source-orchestrator / vuln-merge 的任何 `SKILL.md`
+- **不改子 agent**：不修改 sink-orchestrator / source-orchestrator / vuln-merger 的任何配置
 - **不动源**：本 skill 不修改被扫描项目的任何源文件
 - **不动目标分析目录**：所有产物、临时文件、临时脚本**只能**写到 `.vuln_agent_output/` 下，**不得**在被分析项目源码目录里写任何文件
