@@ -101,7 +101,7 @@ prompt: 调用 source-collect skill
 
 ```
 ✅ vuln_hunt 流水线完成
-- 攻击面: X 个
+- 暴露面: X 个
 - 分析完成: A/B（失败: 失败项列表）
 - 漏洞 finding: C/D
 - 复核完成: E/F

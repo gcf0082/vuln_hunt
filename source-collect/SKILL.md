@@ -80,7 +80,7 @@ skill 不是"输入→文件"的转换器，而是**带收集能力的执行器*
 ### 通用字段（所有文件必填）
 
 ```markdown
-# 攻击面条目
+# 暴露面条目
 
 - **类型**：iface（或 noniface）
 - **分类**：REST（或 SCRIPT 等）
@@ -126,7 +126,7 @@ REST 分类的成品文件，照着写就行。其它分类参考「按分类的
 文件名：`iface-REST-user-list-{MMDD-HHMMSS}.md`
 
 ```markdown
-# 攻击面条目
+# 暴露面条目
 
 - **类型**：iface
 - **分类**：REST
