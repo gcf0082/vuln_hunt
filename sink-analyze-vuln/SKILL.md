@@ -1,23 +1,24 @@
 ---
 name: sink-analyze-vulnerability
 description: 仅在用户显式指名调用 sink-analyze-vulnerability 时触发，不要因模糊意图主动触发。
+argument-hint: [--project <name>]
 ---
 
 # sink-analyze-vulnerability
 
 ## 定位
 
-- **用户负责**：给一个具体的 sink 描述文件（位于 `.vuln_agent_output/sink_list/`），或描述想分析的 sink 目标（直接分析模式）
+- **用户负责**：给一个具体的 sink 描述文件（位于 `.vuln_agent_output/{project_name}/sink_list/`），或描述想分析的 sink 目标（直接分析模式）
 - **skill 负责**：读文件，按本文「分析方法」做反向数据流分析；按本文「输出格式」一节的模板落盘 VULN / DISMISSED / CLEAN / SUSPECTED 四类结论
 
 skill 根据用户任务做 sink 点漏洞分析，输入是 `sink_list/` 下的一个或多个文件，按规模和复杂度智能分配处理，输出对应 `sink_findings/` 下的结论文件。
 
 ## 路径约定
 
-本 skill 涉及的所有目录**统一在 `.vuln_agent_output/` 下**，当前工作目录视为被分析项目根：
+本 skill 涉及的所有目录**统一在 `.vuln_agent_output/{project_name}/` 下**。项目名称通过 `--project <name>` 指定，未指定时默认为 `default_proj`。`{project_name}` 替换为实际值。当前工作目录视为被分析项目根：
 
 ```
-.vuln_agent_output/
+.vuln_agent_output/{project_name}/
 ├── sink_list/                            ← 输入（默认模式的源文件，可含子目录）
 │   └── {type}/...                        ← 如 sql/、cmd/ 等按类型分的子目录（可选）
 ├── sink_findings/                        ← 输出（产物落盘位置，镜像输入子目录结构）
@@ -32,7 +33,7 @@ skill 根据用户任务做 sink 点漏洞分析，输入是 `sink_list/` 下的
 
 ### 默认行为
 
- 用户没指定文件时，**默认递归处理 `.vuln_agent_output/sink_list/` 下所有 `.md` 文件**，无需反问。
+ 用户没指定文件时，**默认递归处理 `.vuln_agent_output/{project_name}/sink_list/` 下所有 `.md` 文件**，无需反问。
  同名产物默认覆盖。多文件由调用方（orchestrator）并发派发（5 并发）。
  输入文件名带 MMDD-HHMMSS 时间戳，产物文件名沿用输入 stem 保留时间戳，与上一 stage 一一对应。输入在子目录中的，产物保持同一子目录结构（如 `sink_list/sql/X-0608-021435.md` → `sink_findings/sql/VULN-X-0608-021435-1.md`）。
 
@@ -74,7 +75,7 @@ skill 根据用户任务做 sink 点漏洞分析，输入是 `sink_list/` 下的
 1. **解析任务**：从用户调用消息中提取：
    - `sink_file`（如已指定）
    - `task_content`（本次分析任务——漏洞模式 / 规则 / 关注点等）
-2. **读 sink 文件**：打开 `.vuln_agent_output/sink_list/{sink_file}` 拿到危险操作位置、所在函数、相关参数列表（`sink_file` 可含子目录路径，如 `sql/sql-user-query-0608-021435.md`）
+2. **读 sink 文件**：打开 `.vuln_agent_output/{project_name}/sink_list/{sink_file}` 拿到危险操作位置、所在函数、相关参数列表（`sink_file` 可含子目录路径，如 `sql/sql-user-query-0608-021435.md`）
 3. **反向数据流分析**：从 sink 出发，沿调用链**反向**追踪能影响该 sink 的 source（用户输入 / DB 读取 / 文件读取 / 三方调用返回等）
 4. **路径分级**：按可达性 / 防护情况对每条路径分级（VULN / DISMISSED / CLEAN / SUSPECTED）
 5. **举证核查**：检查每条结论是否有代码级事实支撑
@@ -203,7 +204,7 @@ sink 函数位置（文件:行号）
 - **不动源**：不修改任何源文件、配置文件
 - **按需分配**：根据用户任务和 sink 复杂度灵活处理单条或多条
 - **保留产物对应关系（含时间戳）**：输出文件名 = 输入文件名 stem（含 MMDD-HHMMSS 时间戳）+ 编号后缀，仅目录从 `sink_list/` 变成 `sink_findings/`；输入在子目录中的，产物镜像同一子目录结构（如 `sink_list/sql/X.md` → `sink_findings/sql/VULN-X-1.md`）
-- **失败显式标注**：走不通就显式标注、写进 `.vuln_agent_output/meta/error/sink-analyze-vulnerability.md`
-- **不动目标分析目录**：所有产物、临时文件、临时脚本**只能**写到 `.vuln_agent_output/` 下，**不得**在被分析项目源码目录里写任何文件
+- **失败显式标注**：走不通就显式标注、写进 `.vuln_agent_output/{project_name}/meta/error/sink-analyze-vulnerability.md`
+- **不动目标分析目录**：所有产物、临时文件、临时脚本**只能**写到 `.vuln_agent_output/{project_name}/` 下，**不得**在被分析项目源码目录里写任何文件
 - **不要去掉时间戳**：上一 stage 文件名带的 MMDD-HHMMSS 时间戳是跨 stage 追溯的关键锚点，禁止在产物命名中省略
 
