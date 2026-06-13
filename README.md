@@ -33,9 +33,7 @@ skills/                              ← SKILL.md 详细指令
 ├── sink-orchestrator/               ← sink 流水线编排指令
 ├── full-orchestrator/               ← 全量流水线编排指令
 ├── vuln-dispatch/                   ← 意图识别路由（skill 保留）
-├── callchain-trace/                 ← 调用链追踪方法参考
-├── vuln-analysis-method/            ← 通用分析方法论
-└── source-plan-vuln-tasks/          ← 已从流水线移除
+└── callchain-trace/                 ← 调用链追踪方法参考
 ```
 
 ## Source-based 流水线
