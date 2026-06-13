@@ -53,7 +53,8 @@ scope 隐式默认当前项目目录，**不**反问。
 **Stage 0**（单次）：
 ```
   subagent: sink-collector
-prompt: 按 sink-collector agent 的职责执行
+  # 派发 subagent（非加载 skill）
+  prompt: 按 sink-collector agent 的职责执行
         - work_dir: .
         - user_intent: {用户给的 sink 类型}
         - vuln_type: {vuln_type，如 cmd/sql}
@@ -65,6 +66,7 @@ prompt: 按 sink-collector agent 的职责执行
 递归读 sink_list/ 下所有 .md 得到 sink 列表
 对每个 sink 同时派发（一次 LLM 响应中发 ≤5 个 task）：
   subagent: sink-vulnerability-analyst
+  # 派发 subagent（非加载 skill）
   prompt: 按 sink-vulnerability-analyst agent 的职责执行
           - work_dir: .
           - sink_file: {sink 相对路径，如 sql/sql-user-query-0608-021435.md}
@@ -76,6 +78,7 @@ prompt: 按 sink-collector agent 的职责执行
 递归读 sink_findings/ 下所有 .md 得到 stem 列表
 对每个 stem 同时派发：
   subagent: sink-re-analyzer
+  # 派发 subagent（非加载 skill）
   prompt: 按 sink-re-analyzer agent 的职责执行
           - work_dir: .
           - sink_finding_file: sink_findings/{stem 相对路径}

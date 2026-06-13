@@ -7,7 +7,7 @@ description: 仅在用户显式指名调用 full-orchestrator 时触发，不要
 
 默认先跑 sink 管道再跑 source 管道，最后合并结果。支持 `--order source-first` 切换为先 source 后 sink。
 
-- **本 skill 做**：按顺序触发 sink-orchestrator → source-orchestrator → vuln-merger（或 source-first 变体）
+- **本 skill 做**：按顺序派发 subagent：sink-orchestrator → source-orchestrator → vuln-merger（或 source-first 变体）
 - **本 skill 不做**：状态文件、断点续跑、失败重试、复杂汇报 —— 子 agent 失败就跳过该项
 
 ## 流水线
@@ -64,6 +64,7 @@ description: 仅在用户显式指名调用 full-orchestrator 时触发，不要
 **Stage 0**（单次，默认 sink / source-first 时 source）：
 ```
 subagent: {sink-orchestrator | source-orchestrator}
+# 派发 subagent（非加载 skill）
 prompt: 按 {sink-orchestrator | source-orchestrator} agent 的职责执行
         - work_dir: .
         - task: {用户原始任务描述}
@@ -74,6 +75,7 @@ prompt: 按 {sink-orchestrator | source-orchestrator} agent 的职责执行
 **Stage 1**（单次，另一个管道）：
 ```
 subagent: {source-orchestrator | sink-orchestrator}
+# 派发 subagent（非加载 skill）
 prompt: 按 {source-orchestrator | sink-orchestrator} agent 的职责执行
         - work_dir: .
         - task: {用户原始任务描述}
@@ -84,6 +86,7 @@ prompt: 按 {source-orchestrator | sink-orchestrator} agent 的职责执行
 **Stage 2**（单次）：
 ```
 subagent: vuln-merger
+# 派发 subagent（非加载 skill）
 prompt: 按 vuln-merger agent 的职责执行
         - work_dir: .
         - task: {用户原始任务描述}
