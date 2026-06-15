@@ -1,0 +1,10 @@
+{
+  "name": "entry-point-analyzer",
+  "version": "2.0.0",
+  "description": "Analyzes codebases to identify externally reachable entry points for security auditing. Detects web APIs, CLI commands, IPC handlers, library exports, and MQ consumers. Categorizes by access level and generates structured audit reports.",
+  "author": {
+    "name": "Nicolas Donboly",
+    "email": "opensource@trailofbits.com",
+    "url": "https://github.com/trailofbits"
+  }
+}
