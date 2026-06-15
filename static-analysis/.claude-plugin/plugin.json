@@ -1,0 +1,8 @@
+{
+  "name": "static-analysis",
+  "version": "2.0.0",
+  "description": "Semgrep security scanning with SARIF output analysis for CodeQL and other tools. Fast pattern-based vulnerability detection plus post-scan result processing.",
+  "author": {
+    "name": "Axel Mierczuk & Paweł Płatek"
+  }
+}
