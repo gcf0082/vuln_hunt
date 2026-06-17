@@ -23,11 +23,11 @@ compatibility:
 
 ## 执行纪律
 
-本 skill 所有阶段均**禁止直接读取源码文件**。分析基于 `log_sink/` 和 `idx/` 中的内容，不得打开源码目录下的 `.java/.py` 等源文件。
+本 skill 所有阶段均**禁止直接读取源码文件**。分析基于 `log_sink/` 中的内容，不得打开源码目录下的 `.java/.py` 等源文件。
 
 必须按以下 7 个步骤严格顺序执行，**不得跳过、合并或变更顺序**。每个步骤仅允许执行其描述中所述的操作，不得提前进入下一阶段的工作（如 Step 0 只允许运行脚本，不得读取或分析输出文件）：
 
-1. **Step 0** — 运行脚本，成功后分派 agent（仅执行脚本 + 错误处理 + 分派，禁止读取 `log_sink/` 或 `idx/`）
+1. **Step 0** — 运行脚本，成功后分派 agent（仅执行脚本 + 错误处理 + 分派，禁止读取 `log_sink/`）
 2. **Step 1** — 常量字符串过滤（移除无变量的纯字符串日志行）
 3. **Step 2** — 不完整日志保留（标记截断行）
 4. **Step 3** — 变量名综合分析（核心分析）
@@ -64,9 +64,6 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
   log_sink/                         ← Step 0: 日志内容
     sensitive-logs-001.txt
     sensitive-logs-002.txt
-  idx/                              ← Step 0: 源码索引
-    sensitive-logs-001.idx.txt
-    sensitive-logs-002.idx.txt
   hits/                             ← 分析分派: agent 输出
     sensitive-logs-001.txt          ← 仅确认疑似敏感的行
   details/                          ← 合并详情: merge-hits.py 输出
@@ -74,8 +71,6 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
 ```
 
 - `log_sink/` 下 `.txt` 文件，格式 `序号# 日志内容`
-- `idx/` 下 `.idx.txt` 文件，同序号对应 `文件路径:行号`
-- `log_sink/NNN.txt` ↔ `idx/NNN.idx.txt` 通过文件名和序号一一映射
 - 每 100 行一个文件
 
 **执行错误处理：**
@@ -105,7 +100,7 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
 - `hits/sensitive-logs-NNN.txt` — 格式与 `log_sink/` 完全一致: `序号# 日志内容`
 - 仅写入 Step 5 复核确认保留的行，未被标记的行不保留
 - 如某文件无任何疑似敏感行，则不在 `hits/` 创建对应文件
-- 序号保持原始序号不变；通过 hits 中序号 → `idx/` 中同名文件即可定位源码
+- 序号保持原始序号不变
 
 **结果聚合：** 父会话收集所有 agent 完成通知，确认 `hits/` 下文件数量。
 
