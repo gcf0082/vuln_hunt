@@ -74,8 +74,8 @@ def write_output(entries, output_dir, lines_per_file=100):
              open(idx_path, 'w', encoding='utf-8') as fi:
             for offset, (relpath, lineno, line) in enumerate(batch):
                 seq = batch_idx + offset + 1
-                ft.write(f'[{seq}]  {line}\n')
-                fi.write(f'[{seq}]  {relpath}:{lineno}\n')
+                ft.write(f'{seq}#  {line}\n')
+                fi.write(f'{seq}#  {relpath}:{lineno}\n')
 
     print(f"Done. {len(entries)} log lines written to {output_dir}")
 

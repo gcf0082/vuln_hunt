@@ -9,8 +9,8 @@ description: 分析单份敏感日志文件（.txt），逐条执行常量过滤
 
 ## 输入
 
-- `<dir>/log_sink/sensitive-logs-NNN.txt` — 日志行文件，每行格式 `[序号]  日志内容`
-- `<dir>/idx/sensitive-logs-NNN.idx.txt` — 索引文件，每行格式 `[序号]  文件路径:行号`
+- `<dir>/log_sink/sensitive-logs-NNN.txt` — 日志行文件，每行格式 `序号# 日志内容`
+- `<dir>/idx/sensitive-logs-NNN.idx.txt` — 索引文件，每行格式 `序号# 文件路径:行号`
 - 两个文件通过 `[序号]` 一一对应
 - `.idx.txt` 路径由 `.txt` 路径推导：`log_sink/` → `idx/`，扩展名 `.txt` → `.idx.txt`
 

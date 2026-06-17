@@ -57,14 +57,14 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
 ```
 .vuln_agent_output/sensitive-log-detector/
   log_sink/
-    sensitive-logs-001.txt         ← [1]  logger.info("processing: %s", orderId)
+    sensitive-logs-001.txt         ← 1#  logger.info("processing: %s", orderId)
     sensitive-logs-002.txt
   idx/
-    sensitive-logs-001.idx.txt     ← [1]  src/main/java/OrderService.java:52
+    sensitive-logs-001.idx.txt     ← 1#  src/main/java/OrderService.java:52
     sensitive-logs-002.idx.txt
 ```
 
-- `.txt` 文件在 `log_sink/`，序号 `[1]` `[2]` ... 对应日志内容
+- `.txt` 文件在 `log_sink/`，格式 `序号# 日志内容`
 - `.idx.txt` 文件在 `idx/`，相同序号对应 `文件路径:行号`
 - `log_sink/NNN.txt` ↔ `idx/NNN.idx.txt` 通过文件名和序号一一映射
 - 每 100 行一个文件
