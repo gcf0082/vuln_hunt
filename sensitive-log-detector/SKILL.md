@@ -83,11 +83,26 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
 
 以上任一错误发生时，**不得**继续执行 Step 1-5。
 
+### 分析分派
+
+输出目录中每个 `sensitive-logs-NNN.txt` 分派一个独立 subagent，各自在独立的上下文窗口中执行完整的 Step 1-5 分析。
+
+分派指令模板：
+```
+分析文件 <path/sensitive-logs-NNN.txt>。
+从同目录下的 <path/sensitive-logs-NNN.idx.txt> 读取序号对应的源码路径用于输出。
+执行 Step 1-5，返回分析结果。
+```
+
+每个 subagent 读取 `.txt` 文件逐行分析，同时读取同目录 `.idx.txt` 文件获取各序号对应的 `文件路径:行号`。
+
+**结果聚合：** 父会话收集所有 subagent 的分析结果汇总输出。
+
 ---
 
 ## Step 1: 常量字符串过滤
 
-对 Step 0 输出的 `.txt` 文件中每行日志，逐条执行以下分析。如果日志打印的内容是**纯常量字符串**（没有变量插值、没有 `%s`/`{}`/`${}` 等格式化占位符），则**一定不会包含敏感信息**，直接跳过。
+逐条分析日志行，跳过纯常量字符串。
 
 ```
 示例（跳过 — 常量字符串，无变量）:
@@ -225,11 +240,12 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
 
 ## Step 4: 输出格式
 
-对于每条被判定为**疑似敏感**的日志，按以下格式输出：
+对于每条被判定为**疑似敏感**的日志，按以下格式输出（通过 `.idx.txt` 获取源码位置）：
 
 ```
-[行号] 疑似敏感 [等级] 原因: <分析说明>
+[序号] 疑似敏感 [等级] | 原因: <分析说明>
        日志: <原始日志内容>
+       源码: <文件路径:行号>
 ```
 
 等级说明：
@@ -239,21 +255,13 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
 示例输出：
 
 ```
-[252] 疑似敏感 MEDIUM | 原因: 变量名 custom_json 是容器类（JSON数据），内容不确定
-       日志: 252     LOGGER.info('conf/step_conf/ file_list: %s', custom_json)
-
 [15] 疑似敏感 HIGH | 原因: 变量名 password 高度疑似敏感信息
-       日志: 15      logger.info('user password: %s', password)
+       日志: logger.info('user password: %s', password)
+       源码: src/main/java/LoginService.java:42
 
 [88] 疑似敏感 MEDIUM | 原因: 变量名 body 是容器类，可能包含请求/响应体中的敏感字段
-       日志: 88      LOGGER.debug('request body: %s', body)
-
-[67] 疑似敏感 HIGH | 原因: 变量名 headers 是容器类，且格式字符串含 header
-       日志: 67      LOGGER.info('request headers: %s', headers)
-
-[99] 疑似敏感 HIGH | 原因: 不完整的日志语句，无法判断是否包含敏感信息
-       日志: 99      LOGGER.info('the token is
- ```
+       日志: LOGGER.debug('request body: %s', body)
+       源码: src/main/java/OrderController.java:128
 
 ## Step 5: 最终复核
 
