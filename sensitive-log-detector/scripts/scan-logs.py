@@ -5,7 +5,6 @@ output flat files without function grouping.
 
 Output structure:
   log_sink/sensitive-logs-NNN.txt     (序号 + 日志内容)
-  idx/sensitive-logs-NNN.idx.txt      (序号 + 文件路径:行号)
 
 Usage:
   python3 scan-logs.py <code-dir> [output-dir]
@@ -58,9 +57,7 @@ def write_output(entries, output_dir, lines_per_file=100):
         return
 
     log_sink_dir = os.path.join(output_dir, 'log_sink')
-    idx_dir = os.path.join(output_dir, 'idx')
     os.makedirs(log_sink_dir, exist_ok=True)
-    os.makedirs(idx_dir, exist_ok=True)
 
     files_created = []
 
@@ -70,17 +67,13 @@ def write_output(entries, output_dir, lines_per_file=100):
         base = f'sensitive-logs-{part:03d}'
 
         txt_path = os.path.join(log_sink_dir, f'{base}.txt')
-        idx_path = os.path.join(idx_dir, f'{base}.idx.txt')
 
-        with open(txt_path, 'w', encoding='utf-8') as ft, \
-             open(idx_path, 'w', encoding='utf-8') as fi:
+        with open(txt_path, 'w', encoding='utf-8') as ft:
             for offset, (relpath, lineno, line) in enumerate(batch):
                 seq = batch_idx + offset + 1
                 ft.write(f'{seq}#  {line}\n')
-                fi.write(f'{seq}#  {relpath}:{lineno}\n')
 
         files_created.append(txt_path)
-        files_created.append(idx_path)
 
     print(f"Done. {len(entries)} log lines, {len(files_created)} file(s)")
     for fp in files_created:

@@ -38,7 +38,7 @@ compatibility:
 
 ## Step 0: 日志采集
 
-**Step 0 阶段仅允许执行脚本和分派 agent。禁止读取 `log_sink/`、`idx/` 或任何输出文件的内容。所有分析工作必须交由 agent 在 Step 1-5 中完成。**
+**Step 0 阶段仅允许执行脚本和分派 agent。禁止读取 `log_sink/` 或任何输出文件的内容。所有分析工作必须交由 agent 在 Step 1-5 中完成。**
 
 ### 0.1 首选方案（必须优先执行）
 
@@ -61,18 +61,13 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
   log_sink/                         ← Step 0: 脚本扫描
     sensitive-logs-001.txt
     sensitive-logs-002.txt
-  idx/                              ← Step 0: 源码索引
-    sensitive-logs-001.idx.txt
-    sensitive-logs-002.idx.txt
   hits/                             ← 分析分派: agent 输出
     sensitive-logs-001.txt          ← 仅确认疑似敏感的行
   details/                          ← 合并详情: merge-hits.py 输出
     sensitive-logs-001.txt          ← 序号# 日志内容（同 hits/）
 ```
 
-- `.txt` 文件在 `log_sink/`，格式 `序号# 日志内容`
-- `.idx.txt` 文件在 `idx/`，相同序号对应 `文件路径:行号`
-- `log_sink/NNN.txt` ↔ `idx/NNN.idx.txt` 通过文件名和序号一一映射
+- `log_sink/` 下 `.txt` 文件，格式 `序号# 日志内容`
 - 每 100 行一个文件
 
 **执行错误处理：**
@@ -88,7 +83,7 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
 
 ### 分析分派（必须执行）
 
-脚本执行成功后，必须立即进入分析分派阶段。**父会话在此阶段仅做分派操作，不得读取 `log_sink/` 或 `idx/` 内容。** 不得由父会话直接读取 `.txt` 文件进行分析，  
+脚本执行成功后，必须立即进入分析分派阶段。**父会话在此阶段仅做分派操作，不得读取 `log_sink/` 内容。** 不得由父会话直接读取 `.txt` 文件进行分析，  
 不得跳过此步骤。
 
 遍历 `log_sink/` 下每个 `sensitive-logs-NNN.txt`，逐一分配 **log-analyzer** agent：
