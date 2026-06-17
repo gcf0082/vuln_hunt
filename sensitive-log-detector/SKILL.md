@@ -67,7 +67,7 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
   hits/                             ← 分析分派: agent 输出
     sensitive-logs-001.txt          ← 仅确认疑似敏感的行
   details/                          ← 合并详情: merge-hits.py 输出
-    sensitive-logs-001.txt          ← 序号# 日志内容 + 源码路径
+    sensitive-logs-001.txt          ← 序号# 日志内容（同 hits/）
 ```
 
 - `.txt` 文件在 `log_sink/`，格式 `序号# 日志内容`
@@ -108,21 +108,19 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
 
 ### 合并详情
 
-`hits/` 生成完毕后，运行 `merge-hits.py` 将 hits 序号与 idx 源码位置拼接：
+`hits/` 生成完毕后，运行 `merge-hits.py` 将 `hits/` 内容复制到 `details/`：
 
 ```bash
 python3 <skill_dir>/scripts/merge-hits.py [输出目录]
 ```
 
-输出到 `<输出目录>/details/`，每行日志附带源码路径：
+输出到 `<输出目录>/details/`，格式与 `hits/` 一致：
 
 ```
 .vuln_agent_output/sensitive-log-detector/
   details/
     sensitive-logs-001.txt    ← 1#  logger.info("user password: %s", password)
-                                src/main/java/LoginService.java:42
                               2#  LOGGER.debug("request body: %s", body)
-                                src/main/java/OrderController.java:128
 ```
 
 ---
