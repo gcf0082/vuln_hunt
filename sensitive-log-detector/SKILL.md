@@ -58,9 +58,12 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
 
 ```
 .vuln_agent_output/sensitive-log-detector/
-  log_sink/                         ← Step 0: 脚本扫描
+  log_sink/                         ← Step 0: 日志内容
     sensitive-logs-001.txt
     sensitive-logs-002.txt
+  idx/                              ← Step 0: 源码索引
+    sensitive-logs-001.idx.txt
+    sensitive-logs-002.idx.txt
   hits/                             ← 分析分派: agent 输出
     sensitive-logs-001.txt          ← 仅确认疑似敏感的行
   details/                          ← 合并详情: merge-hits.py 输出
@@ -68,6 +71,8 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
 ```
 
 - `log_sink/` 下 `.txt` 文件，格式 `序号# 日志内容`
+- `idx/` 下 `.idx.txt` 文件，同序号对应 `文件路径:行号`
+- `log_sink/NNN.txt` ↔ `idx/NNN.idx.txt` 通过文件名和序号一一映射
 - 每 100 行一个文件
 
 **执行错误处理：**
