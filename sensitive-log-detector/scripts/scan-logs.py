@@ -102,7 +102,7 @@ def main():
     print(f"Scanning {code_dir} ...")
     entries = scan_directory(code_dir)
     write_output(entries, output_dir)
-    print(f"Output directory: {output_dir}")
+    print(f"Output directory: {output_dir}/log_sink")
 
 
 if __name__ == '__main__':
