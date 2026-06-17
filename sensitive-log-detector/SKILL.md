@@ -40,14 +40,17 @@ compatibility:
 
 ### 0.1 首选方案（必须优先执行）
 
-运行 `scripts/scan-logs.py` 自动扫描代码目录，提取所有日志打印行并按函数分组输出：
+运行 `<skill_dir>/scripts/scan-logs.py` 自动扫描代码目录，提取所有日志打印行并按函数分组输出：
+
+> `<skill_dir>` 指本 skill 所在的目录，即 `sensitive-log-detector/`。完整路径示例：`/root/projects/vuln_hunt/sensitive-log-detector/scripts/scan-logs.py`。
 
 ```bash
-python3 scripts/scan-logs.py <代码目录> [输出目录]
+python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
 ```
 
-- <代码目录>: 待扫描的源码目录（支持 Python/Java/Kotlin/Groovy/Scala）
-- [输出目录]: 可选，默认 `.vuln_agent_output/sensitive-log-detector/`
+- `<skill_dir>`: 本 skill 的根目录（`sensitive-log-detector/`）
+- `<代码目录>`: 待扫描的源码目录（支持 Python/Java/Kotlin/Groovy/Scala）
+- `[输出目录]`: 可选，默认 `.vuln_agent_output/sensitive-log-detector/`
 
 **输出结构：**
 
