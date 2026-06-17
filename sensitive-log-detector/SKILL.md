@@ -38,11 +38,11 @@ compatibility:
 ### 0.1 执行脚本
 
 ```bash
-python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
+python3 <skill_dir>/scripts/scan-logs.py [代码目录] [输出目录]
 ```
 
 - `<skill_dir>`: 本 skill 根目录（`sensitive-log-detector/`）
-- `<代码目录>`: 待扫描源码目录
+- `[代码目录]`: 可选，默认当前目录
 - `[输出目录]`: 可选，默认 `.vuln_agent_output/sensitive-log-detector/`
 
 **输出结构：**
