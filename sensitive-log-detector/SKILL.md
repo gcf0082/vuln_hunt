@@ -101,12 +101,23 @@ compatibility:
 
 **✅ 低敏感（LOW）—— 通常不包含敏感信息：**
 
+> **⚠️ 特别注意：IP 地址和主机名不是敏感信息。**
+> `ip`、`hostname`、`domain`、`server` 等变量输出的是网络地址/标识，不是密码、token 或密钥。
+> 即使格式化字符串包含 "from ip"、"host" 等词，只要变量是 IP 或主机名，直接跳过。
+> 安全审计关注的是凭据泄露，IP 地址和主机名不在此范围内。
+> ```
+> 示例（跳过 — IP地址，非敏感）:
+>    88   logger.info("login from ip: %s", client_ip)
+>    12   log.debug("request host: %s", hostname)
+> ```
+
 | 变量名关键词 | 原因 |
 |---|---|
 | `username`, `user_name`, `login_name`, `nick`, `nickname` | 用户名（非敏感） |
 | `name`, `title`, `label`, `tag` | 通用名称 |
 | `id`, `user_id`, `uid`, `uuid` | 标识符（非敏感） |
 | `ip`, `ip_address`, `client_ip`, `remote_addr` | IP地址（非敏感） |
+| `host`, `hostname`, `domain`, `server`, `server_name` | 主机名/域名（非敏感） |
 | `path`, `filepath`, `dir`, `directory`, `filename` | 文件路径 |
 | `length`, `len`, `size`, `count`, `total` | 长度/数量 |
 | `status`, `code`, `status_code`, `error_code`, `errno` | 状态码 |
