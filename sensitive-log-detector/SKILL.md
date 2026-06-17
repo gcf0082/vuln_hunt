@@ -42,7 +42,7 @@ compatibility:
 
 运行 `<skill_dir>/scripts/scan-logs.py` 自动扫描代码目录，提取所有日志打印行并按函数分组输出：
 
-> `<skill_dir>` 指本 skill 所在的目录，即 `sensitive-log-detector/`。完整路径示例：`/root/projects/vuln_hunt/sensitive-log-detector/scripts/scan-logs.py`。
+> `<skill_dir>` 指本 skill 的根目录（`sensitive-log-detector/`），请替换为实际路径。
 
 ```bash
 python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
