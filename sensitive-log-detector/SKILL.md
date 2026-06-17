@@ -67,7 +67,8 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
   hits/                             ← 分析分派: agent 输出
     sensitive-logs-001.txt          ← 仅确认疑似敏感的行
   details/                          ← 合并详情: merge-hits.py 输出
-    sensitive-logs-001.txt          ← 序号# 日志内容（同 hits/）
+    sensitive-logs-001.txt          ← 序号# 日志内容
+                                      文件路径:行号
 ```
 
 - `log_sink/` 下 `.txt` 文件，格式 `序号# 日志内容`
@@ -301,7 +302,7 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
 
 ## Step 6: 合并详情
 
-所有 agent 完成分析、`hits/` 已确认后，运行 `merge-hits.py` 将 `hits/` 内容复制到 `details/`：
+所有 agent 完成分析、`hits/` 已确认后，运行 `merge-hits.py` 将 `hits/` 序号与 `idx/` 源码位置合并输出到 `details/`：
 
 ```bash
 python3 <skill_dir>/scripts/merge-hits.py [输出目录]
