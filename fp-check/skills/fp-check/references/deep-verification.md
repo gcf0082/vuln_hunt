@@ -141,3 +141,7 @@
 ## 门控审查
 
 应用 [gate-reviews.md]({baseDir}/references/gate-reviews.md) 中的六个门控以得出裁定。
+
+## 写入输出文件
+
+按 SKILL.md「输出要求」节将验证结果写入文件。

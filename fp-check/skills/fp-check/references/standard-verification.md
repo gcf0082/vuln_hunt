@@ -76,3 +76,7 @@
 ### 第 6 步：门控审查
 
 应用 [gate-reviews.md]({baseDir}/references/gate-reviews.md) 中的所有六个门控和 [false-positive-patterns.md]({baseDir}/references/false-positive-patterns.md) 中的所有 13 项，以得出裁定。
+
+### 第 7 步：写入输出文件
+
+按 SKILL.md「输出要求」节将验证结果写入文件。
