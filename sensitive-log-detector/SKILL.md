@@ -19,13 +19,77 @@ compatibility:
 
 **核心原则：宁可误报（false positive）也不要漏报（false negative）。** 安全审查场景下，漏掉真正的敏感信息比多报几条严重得多。如果对某个变量不确定，把它标记为疑似敏感。
 
-## 分析策略
+---
 
-按以下优先级依次分析每一条日志语句：
+## 执行纪律
 
-### Step 1: 常量字符串过滤
+本 skill 必须按以下 6 个步骤严格顺序执行，**不得跳过、合并或变更顺序**：
 
-如果日志打印的内容是**纯常量字符串**（没有变量插值、没有 `%s`/`{}`/`${}` 等格式化占位符），则**一定不会包含敏感信息**，直接跳过。
+1. **Step 0** — 日志采集（首选运行 `scripts/scan-logs.py`，不可用时用回退方案）
+2. **Step 1** — 常量字符串过滤（移除无变量的纯字符串日志行）
+3. **Step 2** — 不完整日志保留（标记截断行）
+4. **Step 3** — 变量名综合分析（核心分析）
+5. **Step 4** — 输出格式（按模板输出结果）
+6. **Step 5** — 最终复核（逐条排除误报）
+
+**违规处理：** 如果发现任何步骤被跳过、合并或未按顺序执行，必须回退到当前步骤的起点重新执行。不得以"效率"、"看起来很明显"等理由跳过任何步骤。
+
+---
+
+## Step 0: 日志采集
+
+### 0.1 首选方案（必须优先执行）
+
+运行 `scripts/scan-logs.py` 自动扫描代码目录，提取所有日志打印行并按函数分组输出：
+
+```bash
+python3 scripts/scan-logs.py <代码目录> [输出目录]
+```
+
+- <代码目录>: 待扫描的源码目录（支持 Python/Java/Kotlin/Groovy/Scala）
+- [输出目录]: 可选，默认 `.vuln_agent_output/sensitive-log-detector/`
+
+**输出结构：**
+
+```
+.vuln_agent_output/sensitive-log-detector/
+  processOrder/                    ← 按函数名分组
+    sensitive-logs-001.txt         ← [1]  logger.info("processing: %s", orderId)
+    sensitive-logs-001.idx.txt     ← [1]  src/main/java/OrderService.java:52
+    sensitive-logs-002.txt
+    sensitive-logs-002.idx.txt
+  loginHandler/
+    sensitive-logs-001.txt
+    sensitive-logs-001.idx.txt
+  __module__/                      ← 无法定位到具体函数的归此
+    sensitive-logs-001.txt
+    sensitive-logs-001.idx.txt
+```
+
+- `.txt` 文件: 序号 `[1]` `[2]` ... 对应日志内容
+- `.idx.txt` 文件: 相同序号对应 `文件路径:行号`
+- 每 100 行一个文件，两个文件通过序号一一对应
+
+**执行完成后确认：** 输出目录下有 `.txt` 文件 → 进入 Step 1。如无输出则检查代码目录路径。
+
+### 0.2 回退方案（仅当脚本不可用时）
+
+> **警告：** 回退方案会导致日志行丢失函数分组信息，分析质量下降。仅当 `scan-logs.py` 确实无法执行时使用。
+
+**方式一：粘贴日志文本**
+用户直接粘贴日志内容，每行格式如：
+```
+252     LOGGER.info('conf/step_conf/ file_list: %s', custom_json)
+```
+
+**方式二：读取日志文件**
+用户提供文件路径，读取后逐行分析。
+
+---
+
+## Step 1: 常量字符串过滤
+
+对 Step 0 输出的 `.txt` 文件中每行日志，逐条执行以下分析。如果日志打印的内容是**纯常量字符串**（没有变量插值、没有 `%s`/`{}`/`${}` 等格式化占位符），则**一定不会包含敏感信息**，直接跳过。
 
 ```
 示例（跳过 — 常量字符串，无变量）:
@@ -35,7 +99,7 @@ compatibility:
   76      log.debug("Health check passed")
 ```
 
-### Step 2: 不完整日志保留
+## Step 2: 不完整日志保留
 
 如果日志语句明显不完整（被截断、语法不完整、缺少闭合引号等），**保留它**——无法判断是否包含敏感信息，宁可信其有。
 
@@ -46,7 +110,7 @@ compatibility:
   67      LOG.debug('certificate content: 
 ```
 
-### Step 3: 变量名综合分析
+## Step 3: 变量名综合分析
 
 这是核心步骤。对于包含变量输出的日志语句，通过以下维度综合分析：
 
@@ -161,7 +225,7 @@ compatibility:
 
 **即：只要变量名是 HIGH 或 MEDIUM，或者格式化字符串包含敏感关键词，就标记为疑似敏感。安全容器类直接跳过。只有变量名是 LOW 且格式化字符串无敏感词时才跳过。**
 
-### Step 4: 输出格式
+## Step 4: 输出格式
 
 对于每条被判定为**疑似敏感**的日志，按以下格式输出：
 
@@ -191,60 +255,9 @@ compatibility:
 
 [99] 疑似敏感 HIGH | 原因: 不完整的日志语句，无法判断是否包含敏感信息
        日志: 99      LOGGER.info('the token is
-```
+ ```
 
-## 输入格式
-
-### 方式一：粘贴日志文本
-
-用户直接粘贴日志内容，按行分析。每行格式如：
-```
-252     LOGGER.info('conf/step_conf/ file_list: %s', custom_json)
-```
-
-### 方式二：读取日志文件
-
-用户提供文件路径，读取后逐行分析。
-
-## 自动化日志扫描
-
-对大型代码库，可使用 `scripts/scan-logs.py` 自动提取所有日志打印行并按函数分组输出：
-
-```bash
-python3 scripts/scan-logs.py <代码目录> [输出目录]
-```
-
-- <代码目录>: 待扫描的源码目录（支持 Python/Java/Kotlin/Groovy/Scala）
-- [输出目录]: 可选，默认 `.vuln_agent_output/sensitive-log-detector/`
-
-**输出结构：**
-
-```
-.vuln_agent_output/sensitive-log-detector/
-  processOrder/                    ← 按函数名分组
-    sensitive-logs-001.txt         ← [1]  logger.info("processing: %s", orderId)
-    sensitive-logs-001.idx.txt     ← [1]  src/main/java/OrderService.java:52
-    sensitive-logs-002.txt
-    sensitive-logs-002.idx.txt
-  loginHandler/
-    sensitive-logs-001.txt
-    sensitive-logs-001.idx.txt
-  __module__/                      ← 无法定位到具体函数的归此
-    sensitive-logs-001.txt
-    sensitive-logs-001.idx.txt
-```
-
-- `.txt` 文件 = 序号 + 日志内容（供 Step 1-5 分析）
-- `.idx.txt` 文件 = 序号 + 文件路径:行号（供追溯源码上下文）
-- 两个文件通过序号一一对应，每 100 条一批
-
-**工作流：**
-
-1. 运行脚本扫描代码目录 → 得到分组后的日志行文件
-2. 对每个函数目录下的 `.txt` 文件逐行执行 Step 1-5 分析
-3. 分析时如需查看源码上下文，使用 `.idx.txt` 中的路径:行号定位
-
-### Step 5: 最终复核
+## Step 5: 最终复核
 
 对 Step 4 标记为疑似敏感的所有结果逐条复核，排除以下误报：
 
