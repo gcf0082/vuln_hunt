@@ -68,6 +68,8 @@ python3 <skill_dir>/scripts/scan-logs.py [代码目录] [输出目录]
 
 ### 0.3 分析分派（必须执行）
 
+**每个文件必须分配独立的 log-analyzer agent，严禁将多个文件交给同一个 agent 处理。**
+
 遍历 `log_sink/` 下每个文件，逐一分配 **log-analyzer** agent：
 
 ```
@@ -76,7 +78,7 @@ python3 <skill_dir>/scripts/scan-logs.py [代码目录] [输出目录]
 
 每个 agent 将分析结果写入 `hits/`（格式同 `log_sink/`，仅保留确认行）。
 
-**结果聚合：** 父会话收集所有 agent 完成通知，确认 `hits/` 下文件数量。
+**结果聚合：** 父会话收集所有 agent 完成通知，确认 `hits/` 下文件数量。每个 agent 只处理一个文件，不可合并。
 
 ---
 
