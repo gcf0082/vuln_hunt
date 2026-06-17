@@ -87,6 +87,18 @@ compatibility:
 | `json`, `dict`, `map` | JSON/字典对象（内容不确定） |
 | `args`, `kwargs`, `arguments`, `params` | 参数集合（可能含密码等） |
 
+**✅ 安全容器类（LOW）—— 变量名已明确表达内容不含用户数据，直接跳过：**
+
+| 变量名关键词 | 原因 |
+|---|---|
+| `config`, `configuration`, `settings`, `app_config` | 配置数据，非用户输入 |
+| `version`, `version_info`, `build_info`, `release_info` | 版本信息 |
+| `stats`, `statistics`, `metrics`, `counters` | 统计数据 |
+| `metadata`, `meta` | 元数据 |
+| `schema`, `structure`, `type_def`, `interface_def` | 结构定义 |
+| `manifest`, `catalog`, `inventory`, `registry` | 清单/目录 |
+| `summary`, `overview`, `aggregation` | 聚合汇总，不包含原始数据 |
+
 **✅ 低敏感（LOW）—— 通常不包含敏感信息：**
 
 | 变量名关键词 | 原因 |
@@ -132,10 +144,11 @@ compatibility:
 | HIGH | 任意 | 🔴 **疑似敏感 HIGH** |
 | MEDIUM | 包含敏感词 | 🔴 **疑似敏感 HIGH** |
 | MEDIUM | 无敏感词 | 🟡 **疑似敏感 MEDIUM** |
-| LOW | 包含敏感词 | 🔴 **疑似敏感 HIGH** |
-| LOW | 无敏感词 | ✅ 跳过 |
+| 安全容器 (LOW) | 任意 | ✅ **跳过** — 变量名已明确内容不含用户数据 |
+| LOW (非安全容器) | 包含敏感词 | 🔴 **疑似敏感 HIGH** |
+| LOW (非安全容器) | 无敏感词 | ✅ 跳过 |
 
-**即：只要变量名是 HIGH 或 MEDIUM，或者格式化字符串包含敏感关键词，就标记为疑似敏感。只有变量名是 LOW 且格式化字符串无敏感词时才跳过。**
+**即：只要变量名是 HIGH 或 MEDIUM，或者格式化字符串包含敏感关键词，就标记为疑似敏感。安全容器类直接跳过。只有变量名是 LOW 且格式化字符串无敏感词时才跳过。**
 
 ### Step 4: 输出格式
 
@@ -181,6 +194,36 @@ compatibility:
 ### 方式二：读取日志文件
 
 用户提供文件路径，读取后逐行分析。
+
+### Step 5: 最终复核
+
+对 Step 4 标记为疑似敏感的所有结果逐条复核，排除以下误报：
+
+**复核点 A — 纯常量字符串复核**
+
+再次确认该日志行是否确实输出了一个变量值。如果日志是纯常量字符串（即使内容包含 password/token/secret 等关键词），直接移除。
+
+```
+误报示例（复核后移除）:
+   42   self.logger.error("username or password error")
+       ✓ 纯常量字符串，内容描述性地提到了 password，但没有输出任何变量
+```
+
+**复核点 B — 描述性文案复核**
+
+日志内容在描述"密码错误"、"token 过期"等事件本身，而非输出敏感变量值。
+
+```
+误报示例（复核后移除）:
+   15   logger.warn("password expired, please reset")
+       ✓ 描述性文案，不是输出密码值
+```
+
+**复核点 C — 安全容器再确认**
+
+如果变量名属于安全容器类（config/version/stats/schema 等）却因 Step 3b 格式化字符串关键词被标记，复核并移除。
+
+复核后移除的条目不再输出。剩余的才是最终结果。
 
 ## 注意事项
 
