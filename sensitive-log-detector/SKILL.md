@@ -85,18 +85,16 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
 
 ### 分析分派
 
-输出目录中每个 `sensitive-logs-NNN.txt` 分派一个独立 subagent，各自在独立的上下文窗口中执行完整的 Step 1-5 分析。
+输出目录中每个 `sensitive-logs-NNN.txt` 分派一个 **log-analyzer** agent，各自在独立的上下文窗口中执行完整的 Step 1-5 分析。
 
-分派指令模板：
+分派指令：
 ```
-分析文件 <path/sensitive-logs-NNN.txt>。
-从同目录下的 <path/sensitive-logs-NNN.idx.txt> 读取序号对应的源码路径用于输出。
-执行 Step 1-5，返回分析结果。
+使用 agents/log-analyzer.md agent 分析 <path/sensitive-logs-NNN.txt>。
 ```
 
-每个 subagent 读取 `.txt` 文件逐行分析，同时读取同目录 `.idx.txt` 文件获取各序号对应的 `文件路径:行号`。
+每个 log-analyzer 读取 `.txt` 文件逐行分析，同时读取同目录 `.idx.txt` 文件获取各序号对应的 `文件路径:行号`。
 
-**结果聚合：** 父会话收集所有 subagent 的分析结果汇总输出。
+**结果聚合：** 父会话收集所有 log-analyzer 的分析结果汇总输出。
 
 ---
 
