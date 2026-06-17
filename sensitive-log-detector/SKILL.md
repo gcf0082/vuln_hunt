@@ -56,22 +56,18 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
 
 ```
 .vuln_agent_output/sensitive-log-detector/
-  processOrder/                    ← 按函数名分组
+  log_sink/
     sensitive-logs-001.txt         ← [1]  logger.info("processing: %s", orderId)
-    sensitive-logs-001.idx.txt     ← [1]  src/main/java/OrderService.java:52
     sensitive-logs-002.txt
+  idx/
+    sensitive-logs-001.idx.txt     ← [1]  src/main/java/OrderService.java:52
     sensitive-logs-002.idx.txt
-  loginHandler/
-    sensitive-logs-001.txt
-    sensitive-logs-001.idx.txt
-  __module__/                      ← 无法定位到具体函数的归此
-    sensitive-logs-001.txt
-    sensitive-logs-001.idx.txt
 ```
 
-- `.txt` 文件: 序号 `[1]` `[2]` ... 对应日志内容
-- `.idx.txt` 文件: 相同序号对应 `文件路径:行号`
-- 每 100 行一个文件，两个文件通过序号一一对应
+- `.txt` 文件在 `log_sink/`，序号 `[1]` `[2]` ... 对应日志内容
+- `.idx.txt` 文件在 `idx/`，相同序号对应 `文件路径:行号`
+- `log_sink/NNN.txt` ↔ `idx/NNN.idx.txt` 通过文件名和序号一一映射
+- 每 100 行一个文件
 
 **执行错误处理：**
 
@@ -85,14 +81,14 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
 
 ### 分析分派
 
-输出目录中每个 `sensitive-logs-NNN.txt` 分派一个 **log-analyzer** agent，各自在独立的上下文窗口中执行完整的 Step 1-5 分析。
+`log_sink/` 下每个 `sensitive-logs-NNN.txt` 分派一个 **log-analyzer** agent，各自在独立的上下文窗口中执行完整的 Step 1-5 分析。
 
 分派指令：
 ```
-使用 agents/log-analyzer.md agent 分析 <path/sensitive-logs-NNN.txt>。
+使用 agents/log-analyzer.md agent 分析 <path/log_sink/sensitive-logs-NNN.txt>。
 ```
 
-每个 log-analyzer 读取 `.txt` 文件逐行分析，同时读取同目录 `.idx.txt` 文件获取各序号对应的 `文件路径:行号`。
+每个 log-analyzer 读取 `log_sink/` 下的 `.txt` 文件逐行分析，同时读取 `idx/` 下同名的 `.idx.txt` 文件获取各序号对应的 `文件路径:行号`（路径替换：`log_sink/` → `idx/`，扩展名 `.txt` → `.idx.txt`）。
 
 **结果聚合：** 父会话收集所有 log-analyzer 的分析结果汇总输出。
 
