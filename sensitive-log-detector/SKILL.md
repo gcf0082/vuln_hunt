@@ -25,7 +25,7 @@ compatibility:
 
 本 skill 必须按以下 6 个步骤严格顺序执行，**不得跳过、合并或变更顺序**：
 
-1. **Step 0** — 日志采集（运行 `scripts/scan-logs.py`，失败则报错停止）
+1. **Step 0** — 日志采集并分派分析（运行脚本，失败则停止；成功后为 log_sink/ 下每个文件分派 agent）
 2. **Step 1** — 常量字符串过滤（移除无变量的纯字符串日志行）
 3. **Step 2** — 不完整日志保留（标记截断行）
 4. **Step 3** — 变量名综合分析（核心分析）
@@ -52,16 +52,20 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
 - `<代码目录>`: 待扫描的源码目录（支持 Python/Java/Kotlin/Groovy/Scala）
 - `[输出目录]`: 可选，默认 `.vuln_agent_output/sensitive-log-detector/`
 
-**输出结构：**
+**输出结构（完整流程）：**
 
 ```
 .vuln_agent_output/sensitive-log-detector/
-  log_sink/
-    sensitive-logs-001.txt         ← 1#  logger.info("processing: %s", orderId)
+  log_sink/                         ← Step 0: 脚本扫描
+    sensitive-logs-001.txt
     sensitive-logs-002.txt
-  idx/
-    sensitive-logs-001.idx.txt     ← 1#  src/main/java/OrderService.java:52
+  idx/                              ← Step 0: 源码索引
+    sensitive-logs-001.idx.txt
     sensitive-logs-002.idx.txt
+  hits/                             ← 分析分派: agent 输出
+    sensitive-logs-001.txt          ← 仅确认疑似敏感的行
+  details/                          ← 合并详情: merge-hits.py 输出
+    sensitive-logs-001.txt          ← 序号# 日志内容 + 源码路径
 ```
 
 - `.txt` 文件在 `log_sink/`，格式 `序号# 日志内容`
@@ -76,21 +80,48 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
 | `<skill_dir>/scripts/scan-logs.py` 不存在 | **报错并停止：** "脚本不存在，请确认 `<skill_dir>` 路径是否正确。" |
 | 脚本执行失败（非零退出码） | **报错并停止：** "脚本执行失败，请手动排查后重试。" |
 | 输出目录为空（无 `.txt` 文件） | **报错并停止：** "未扫描到日志行（代码库可能不含 `.info(/.error(/.debug(/.warn(/.trace(` 调用），或代码目录路径有误。" |
+| 脚本执行成功，有输出 | **必须进入分析分派** |
 
-以上任一错误发生时，**不得**继续执行 Step 1-5。
+以上任一错误发生时（除成功外），**不得**继续执行 Step 1-5。
 
-### 分析分派
+### 分析分派（必须执行）
 
-`log_sink/` 下每个 `sensitive-logs-NNN.txt` 分派一个 **log-analyzer** agent，各自在独立的上下文窗口中执行完整的 Step 1-5 分析。
+脚本执行成功后，必须立即进入分析分派阶段。不得由父会话直接读取 `.txt` 文件进行分析，  
+不得跳过此步骤。
 
-分派指令：
+遍历 `log_sink/` 下每个 `sensitive-logs-NNN.txt`，逐一分配 **log-analyzer** agent：
+
 ```
 使用 agents/log-analyzer.md agent 分析 <path/log_sink/sensitive-logs-NNN.txt>。
 ```
 
-每个 log-analyzer 读取 `log_sink/` 下的 `.txt` 文件逐行分析，同时读取 `idx/` 下同名的 `.idx.txt` 文件获取各序号对应的 `文件路径:行号`（路径替换：`log_sink/` → `idx/`，扩展名 `.txt` → `.idx.txt`）。
+每个 agent 分析后将确认疑似敏感的行写入 `hits/` 目录：
 
-**结果聚合：** 父会话收集所有 log-analyzer 的分析结果汇总输出。
+- `hits/sensitive-logs-NNN.txt` — 格式与 `log_sink/` 完全一致: `序号# 日志内容`
+- 仅写入 Step 5 复核确认保留的行，未被标记的行不保留
+- 如某文件无任何疑似敏感行，则不在 `hits/` 创建对应文件
+- 序号保持原始序号不变；通过 hits 中序号 → `idx/` 中同名文件即可定位源码
+
+**结果聚合：** 父会话收集所有 agent 完成通知，确认 `hits/` 下文件数量。
+
+### 合并详情
+
+`hits/` 生成完毕后，运行 `merge-hits.py` 将 hits 序号与 idx 源码位置拼接：
+
+```bash
+python3 <skill_dir>/scripts/merge-hits.py [输出目录]
+```
+
+输出到 `<输出目录>/details/`，每行日志附带源码路径：
+
+```
+.vuln_agent_output/sensitive-log-detector/
+  details/
+    sensitive-logs-001.txt    ← 1#  logger.info("user password: %s", password)
+                                src/main/java/LoginService.java:42
+                              2#  LOGGER.debug("request body: %s", body)
+                                src/main/java/OrderController.java:128
+```
 
 ---
 
