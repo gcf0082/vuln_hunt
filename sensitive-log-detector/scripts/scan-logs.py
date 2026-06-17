@@ -62,6 +62,8 @@ def write_output(entries, output_dir, lines_per_file=100):
     os.makedirs(log_sink_dir, exist_ok=True)
     os.makedirs(idx_dir, exist_ok=True)
 
+    files_created = []
+
     for batch_idx in range(0, len(entries), lines_per_file):
         batch = entries[batch_idx:batch_idx + lines_per_file]
         part = batch_idx // lines_per_file + 1
@@ -77,7 +79,12 @@ def write_output(entries, output_dir, lines_per_file=100):
                 ft.write(f'{seq}#  {line}\n')
                 fi.write(f'{seq}#  {relpath}:{lineno}\n')
 
-    print(f"Done. {len(entries)} log lines written to {output_dir}")
+        files_created.append(txt_path)
+        files_created.append(idx_path)
+
+    print(f"Done. {len(entries)} log lines, {len(files_created)} file(s)")
+    for fp in files_created:
+        print(f"  {os.path.abspath(fp)}")
 
 
 def main():
