@@ -206,6 +206,44 @@ compatibility:
 
 用户提供文件路径，读取后逐行分析。
 
+## 自动化日志扫描
+
+对大型代码库，可使用 `scripts/scan-logs.py` 自动提取所有日志打印行并按函数分组输出：
+
+```bash
+python3 scripts/scan-logs.py <代码目录> [输出目录]
+```
+
+- <代码目录>: 待扫描的源码目录（支持 Python/Java/Kotlin/Groovy/Scala）
+- [输出目录]: 可选，默认 `.vuln_agent_output/sensitive-log-detector/`
+
+**输出结构：**
+
+```
+.vuln_agent_output/sensitive-log-detector/
+  processOrder/                    ← 按函数名分组
+    sensitive-logs-001.txt         ← [1]  logger.info("processing: %s", orderId)
+    sensitive-logs-001.idx.txt     ← [1]  src/main/java/OrderService.java:52
+    sensitive-logs-002.txt
+    sensitive-logs-002.idx.txt
+  loginHandler/
+    sensitive-logs-001.txt
+    sensitive-logs-001.idx.txt
+  __module__/                      ← 无法定位到具体函数的归此
+    sensitive-logs-001.txt
+    sensitive-logs-001.idx.txt
+```
+
+- `.txt` 文件 = 序号 + 日志内容（供 Step 1-5 分析）
+- `.idx.txt` 文件 = 序号 + 文件路径:行号（供追溯源码上下文）
+- 两个文件通过序号一一对应，每 100 条一批
+
+**工作流：**
+
+1. 运行脚本扫描代码目录 → 得到分组后的日志行文件
+2. 对每个函数目录下的 `.txt` 文件逐行执行 Step 1-5 分析
+3. 分析时如需查看源码上下文，使用 `.idx.txt` 中的路径:行号定位
+
 ### Step 5: 最终复核
 
 对 Step 4 标记为疑似敏感的所有结果逐条复核，排除以下误报：
