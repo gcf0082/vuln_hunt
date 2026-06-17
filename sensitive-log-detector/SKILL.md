@@ -23,7 +23,9 @@ compatibility:
 
 ## 执行纪律
 
-本 skill 必须按以下 6 个步骤严格顺序执行，**不得跳过、合并或变更顺序**。每个步骤仅允许执行其描述中所述的操作，不得提前进入下一阶段的工作（如 Step 0 只允许运行脚本，不得读取或分析输出文件）：
+本 skill 所有阶段均**禁止直接读取源码文件**。分析基于 `log_sink/` 和 `idx/` 中的内容，不得打开源码目录下的 `.java/.py` 等源文件。
+
+必须按以下 7 个步骤严格顺序执行，**不得跳过、合并或变更顺序**。每个步骤仅允许执行其描述中所述的操作，不得提前进入下一阶段的工作（如 Step 0 只允许运行脚本，不得读取或分析输出文件）：
 
 1. **Step 0** — 运行脚本，成功后分派 agent（仅执行脚本 + 错误处理 + 分派，禁止读取 `log_sink/` 或 `idx/`）
 2. **Step 1** — 常量字符串过滤（移除无变量的纯字符串日志行）
@@ -31,6 +33,7 @@ compatibility:
 4. **Step 3** — 变量名综合分析（核心分析）
 5. **Step 4** — 输出格式（按模板输出结果）
 6. **Step 5** — 最终复核（逐条排除误报）
+7. **Step 6** — 合并详情（所有 agent 完成后再运行 merge-hits.py，仅操作 log_sink/hits/details，不接触源码）
 
 **违规处理：** 如果发现任何步骤被跳过、合并或未按顺序执行，必须回退到当前步骤的起点重新执行。不得以"效率"、"看起来很明显"等理由跳过任何步骤。
 
@@ -105,23 +108,6 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
 - 序号保持原始序号不变；通过 hits 中序号 → `idx/` 中同名文件即可定位源码
 
 **结果聚合：** 父会话收集所有 agent 完成通知，确认 `hits/` 下文件数量。
-
-### 合并详情
-
-`hits/` 生成完毕后，运行 `merge-hits.py` 将 `hits/` 内容复制到 `details/`：
-
-```bash
-python3 <skill_dir>/scripts/merge-hits.py [输出目录]
-```
-
-输出到 `<输出目录>/details/`，格式与 `hits/` 一致：
-
-```
-.vuln_agent_output/sensitive-log-detector/
-  details/
-    sensitive-logs-001.txt    ← 1#  logger.info("user password: %s", password)
-                              2#  LOGGER.debug("request body: %s", body)
-```
 
 ---
 
@@ -317,6 +303,16 @@ python3 <skill_dir>/scripts/merge-hits.py [输出目录]
 如果变量名属于安全容器类（config/version/stats/schema 等）却因 Step 3b 格式化字符串关键词被标记，复核并移除。
 
 复核后移除的条目不再输出。剩余的才是最终结果。
+
+## Step 6: 合并详情
+
+所有 agent 完成分析、`hits/` 已确认后，运行 `merge-hits.py` 将 `hits/` 内容复制到 `details/`：
+
+```bash
+python3 <skill_dir>/scripts/merge-hits.py [输出目录]
+```
+
+输出到 `<输出目录>/details/`，格式与 `hits/` 一致。此步骤仅操作 `log_sink/`、`hits/`、`details/`，不读取源码。
 
 ## 注意事项
 
