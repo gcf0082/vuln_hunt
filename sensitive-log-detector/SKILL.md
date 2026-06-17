@@ -1,11 +1,11 @@
 ---
 name: sensitive-log-detector
 description: >
-  分析日志输出中的变量，快速识别是否可能包含敏感信息（如密码、token、密钥等）。
-  适用于代码审计、安全审查场景。当用户给你一段或多段包含变量的日志打印语句，
-  或者日志文件，要求你分析其中是否打印了敏感信息时，务必使用此 skill。
-  注意：即使用户只是贴了一段日志说"帮我看看"，没有明确说"分析敏感信息"，
-  但只要涉及日志中的变量内容分析，就应该触发。
+  分析日志输出中的变量，识别可疑行供审查。适用于代码审计、安全审查场景。
+  当用户给你一段或多段包含变量的日志打印语句，或者日志文件，要求你分析其中
+  是否打印了敏感信息时，务必使用此 skill。注意：即使用户只是贴了一段日志说
+  "帮我看看"，没有明确说"分析敏感信息"，但只要涉及日志中的变量内容分析，
+  就应该触发。
 compatibility:
   - Shell
   - Python
@@ -15,9 +15,7 @@ compatibility:
 
 ## 核心目标
 
-扫描日志打印语句，识别可能输出敏感信息的行，输出供人工审查。
-
-**宁可误报也不要漏报。**
+扫描日志打印语句，识别可疑行输出供审查。
 
 ---
 
@@ -53,7 +51,7 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
 .vuln_agent_output/sensitive-log-detector/
   log_sink/                         ← 日志内容
     sensitive-logs-001.txt          ← 序号# 日志内容
-  hits/                             ← agent 分析输出（仅疑似敏感行）
+  hits/                             ← agent 分析结果
     sensitive-logs-001.txt
   details/                          ← 合并详情
     sensitive-logs-001.txt          ← 序号# 日志内容 + 源码路径
@@ -76,7 +74,7 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
 使用 <skill_dir>/agents/log-analyzer.md agent 分析 <path>/log_sink/sensitive-logs-NNN.txt
 ```
 
-每个 agent 将确认的疑似敏感行写入 `hits/`（格式同 `log_sink/`，仅保留确认行）。
+每个 agent 将分析结果写入 `hits/`（格式同 `log_sink/`，仅保留确认行）。
 
 **结果聚合：** 父会话收集所有 agent 完成通知，确认 `hits/` 下文件数量。
 
@@ -91,11 +89,3 @@ python3 <skill_dir>/scripts/merge-hits.py [输出目录]
 ```
 
 输出到 `<输出目录>/details/`，每条日志附带源码路径。
-
----
-
-## 注意事项
-
-1. **只输出疑似敏感的内容**——不敏感的行不要输出
-2. **宁可误报，不要漏报**——不确定时标记为疑似
-3. **容器类变量打印全部内容时需特别注意**——`LOGGER.info('body: %s', body)` 可能打印整个请求体
