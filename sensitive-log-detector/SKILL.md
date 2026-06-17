@@ -93,7 +93,7 @@ python3 <skill_dir>/scripts/scan-logs.py <代码目录> [输出目录]
 遍历 `log_sink/` 下每个 `sensitive-logs-NNN.txt`，逐一分配 **log-analyzer** agent：
 
 ```
-使用 agents/log-analyzer.md agent 分析 <path/log_sink/sensitive-logs-NNN.txt>。
+使用 <skill_dir>/agents/log-analyzer.md agent 分析 <path/log_sink/sensitive-logs-NNN.txt>。
 ```
 
 每个 agent 分析后将确认疑似敏感的行写入 `hits/` 目录：

@@ -27,7 +27,7 @@ description: 分析单份敏感日志文件（.txt），逐条执行常量过滤
 
 对于包含变量输出的日志行：
 
-**3a. 变量名分析** — 判断变量名等级（HIGH / MEDIUM / 安全容器 / LOW），按 <skill_dir>/SKILL.md 中的变量名对照表判定。
+**3a. 变量名分析** — 判断变量名等级（HIGH / MEDIUM / 安全容器 / LOW），按 SKILL.md 中的变量名对照表判定。
 
 **3b. 格式化字符串分析** — 检查格式化字符串中是否包含敏感关键词（password/token/secret/session/header/body 等）。
 
