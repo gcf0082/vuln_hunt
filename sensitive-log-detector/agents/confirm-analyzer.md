@@ -21,7 +21,7 @@ description: 读取 details/ 文件，打开源码确认每条疑似行的真实
 
 必须有充足证据才能做出判定：
 
-- **已移除** — 必须有明确证据证明变量非敏感（如变量确认是文件路径、配置常量等）。不确定时绝不移除。
+- **已移除** — 必须有充足证据确认变量非敏感，不确定时绝不移除。例如日志记录 SQL 语句，必须向上追溯找到 SQL 拼接/赋值位置，确认拼接内容不可能包含敏感信息（如表名、列名等静态结构），否则按疑似处理。
 - **确认** — 必须有明确证据证明变量敏感（如变量含 password/token 字段、来自 getPassword() 方法等）。
 - **举证不足 / 无法确认** — 保留原疑似结论，不加标签，按疑似问题处理。
 
@@ -33,8 +33,8 @@ description: 读取 details/ 文件，打开源码确认每条疑似行的真实
 
 打开源码文件，定位到命中行，检查变量实际来源：
 
-- 变量赋值来自**明确非敏感源**（如 `File`、`Path`、`getConfig()`、枚举常量等）→ **已移除**，输出调用链
-- 变量赋值来自**明确敏感源**（如 `getPassword()`、`"password"`、`secretKey` 等）→ **确认**，输出调用链
+- 变量赋值来自**明确非敏感源**（如 `File`、`Path`、`getConfig()`、枚举常量、硬编码 SQL 等）→ 在输出中展示赋值处代码证据，标记 **已移除**
+- 变量赋值来自**明确敏感源**（如 `getPassword()`、`"password"`、`secretKey` 等）→ 输出调用链，标记 **确认**
 - 不能确定 → **进入数据流回溯**
 
 ### 2. 数据流回溯（最多 5 层）
@@ -42,8 +42,9 @@ description: 读取 details/ 文件，打开源码确认每条疑似行的真实
 沿变量赋值链向上追溯，每次只上一层，最多 5 层：
 
 - 每层检查该行变量来源
-- 发现**非敏感证据**（如 `File`、`Path`、`.separator`、`getConfig()`）→ 输出调用链，标记 **已移除**
+- 发现**非敏感证据**（如 `File`、`Path`、`.separator`、`getConfig()`、硬编码 SQL 常量）→ 在输出中展示赋值处代码证据，标记 **已移除**
 - 发现**敏感证据**（如 `getPassword()`、`"password"`、`secretKey`）→ 输出调用链，标记 **确认**
+- 若变量为 SQL 字符串，必须找到 SQL 的实际赋值/拼接位置，判断拼接内容是否可能包含用户数据。不能仅因 SQL 变量名不含敏感字段就判定安全。
 - 5 层后仍未找到充足证据 → **保留原结论，不加标签**
 
 ## 输出
@@ -64,14 +65,14 @@ src/main/java/LoginService.java
 ```
 
 ```
-src/main/java/OrderController.java
-  128:  LOGGER.debug("request body: %s", body)  [已移除]
+src/main/java/UserDAO.java
+  55:  logger.debug("executing query: {}", sql)  [已移除]
 
   调用链:
-    行120:  body = request.getBody()                      ← 源头
-    行128:  LOGGER.debug("request body: %s", body)        ← 目标行
+    行50:  String sql = "SELECT id, name, email FROM users WHERE id = ?"  ← 硬编码常量
+    行55:  logger.debug("executing query: {}", sql)                      ← 目标行
 
-  证据: body 来自 HTTP request.getBody()，但已在前端脱敏处理，不含 PII
+  证据: sql 为硬编码字符串常量，只含表名、列名、占位符，不含用户输入数据，确认无敏感信息
 ```
 
 **标签说明：**
