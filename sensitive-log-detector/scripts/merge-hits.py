@@ -107,9 +107,8 @@ def main():
         current_lines += 1
 
         for lineno, seq, log_line in entries:
-            out_file.write(f'  {seq}#  {log_line}\n')
-            out_file.write(f'      :{lineno}\n')
-            current_lines += 2
+            out_file.write(f'  {lineno}:  {log_line}\n')
+            current_lines += 1
             total += 1
 
         out_file.write('\n')
