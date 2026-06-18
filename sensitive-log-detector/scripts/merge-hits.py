@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Merge hits/ with idx/ to produce detailed output with source paths.
+Merge all hits/ files into details/ with source paths, 100 lines per file.
 
-For each file in hits/, look up each line's sequence number in the
-corresponding idx/ file and produce a combined output in details/.
+Reads all hits/*.txt, looks up source paths from idx/, sorts by seq,
+and writes to details/sensitive-logs-NNN.txt (100 lines per file).
 
 Usage:
   python3 merge-hits.py [output-dir]
@@ -14,6 +14,7 @@ import sys
 import re
 
 SEQ_RE = re.compile(r'^(\d+)#')
+LINES_PER_FILE = 100
 
 
 def load_index(idx_path):
@@ -30,28 +31,6 @@ def load_index(idx_path):
     return index
 
 
-def merge_file(txt_path, idx_path, out_path):
-    index = load_index(idx_path)
-    os.makedirs(os.path.dirname(out_path), exist_ok=True)
-
-    count = 0
-    with open(txt_path, 'r', encoding='utf-8') as fin, \
-         open(out_path, 'w', encoding='utf-8') as fout:
-        for line in fin:
-            m = SEQ_RE.match(line)
-            if not m:
-                continue
-            seq = int(m.group(1))
-            rest = line[m.end():].strip()
-            fout.write(f'{seq}#  {rest}\n')
-            if seq in index:
-                fout.write(f'    {index[seq]}\n')
-            else:
-                fout.write(f'    (unknown source)\n')
-            count += 1
-    return count
-
-
 def main():
     if len(sys.argv) > 1:
         root = os.path.abspath(sys.argv[1])
@@ -64,27 +43,50 @@ def main():
     os.makedirs(details_dir, exist_ok=True)
 
     if not os.path.isdir(hits_dir):
-        hits_files = []
-    else:
-        hits_files = sorted(os.listdir(hits_dir))
-
-    if not hits_files:
         print("No files found in hits/ directory.")
         print(f"  (looked in: {hits_dir})")
         sys.exit(0)
 
-    total = 0
+    hits_files = sorted(os.listdir(hits_dir))
+
+    all_entries = []
     for fname in hits_files:
         if not fname.endswith('.txt'):
             continue
         txt_path = os.path.join(hits_dir, fname)
         idx_path = os.path.join(idx_dir, fname.replace('.txt', '.idx.txt'))
-        out_path = os.path.join(details_dir, fname)
-        cnt = merge_file(txt_path, idx_path, out_path)
-        total += cnt
-        print(f"  {os.path.abspath(out_path)}  ({cnt} lines)")
+        index = load_index(idx_path)
+        with open(txt_path, 'r', encoding='utf-8') as fin:
+            for line in fin:
+                m = SEQ_RE.match(line)
+                if not m:
+                    continue
+                seq = int(m.group(1))
+                rest = line[m.end():].strip()
+                src = index.get(seq, '(unknown source)')
+                all_entries.append((seq, rest, src))
 
-    print(f"Done. {total} lines, {len(hits_files)} file(s) written to {details_dir}")
+    if not all_entries:
+        print("No entries found in hits/ files.")
+        sys.exit(0)
+
+    all_entries.sort(key=lambda x: x[0])
+
+    total = 0
+    files_written = 0
+    for batch_idx in range(0, len(all_entries), LINES_PER_FILE):
+        batch = all_entries[batch_idx:batch_idx + LINES_PER_FILE]
+        part = batch_idx // LINES_PER_FILE + 1
+        out_path = os.path.join(details_dir, f'sensitive-logs-{part:03d}.txt')
+        with open(out_path, 'w', encoding='utf-8') as fout:
+            for seq, rest, src in batch:
+                fout.write(f'{seq}#  {rest}\n')
+                fout.write(f'    {src}\n')
+        total += len(batch)
+        files_written += 1
+        print(f"  {os.path.abspath(out_path)}  ({len(batch)} lines)")
+
+    print(f"Done. {total} lines, {files_written} file(s) written to {details_dir}")
 
 
 if __name__ == '__main__':

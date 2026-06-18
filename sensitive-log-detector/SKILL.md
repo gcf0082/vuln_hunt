@@ -53,8 +53,9 @@ python3 <skill_dir>/scripts/scan-logs.py [代码目录] [输出目录]
     sensitive-logs-001.txt          ← 序号# 日志内容
   hits/                             ← agent 分析结果
     sensitive-logs-001.txt
-  details/                          ← 合并详情
+  details/                          ← 合并详情（所有 hits 合并，100 条/文件）
     sensitive-logs-001.txt          ← 序号# 日志内容 + 源码路径
+    sensitive-logs-002.txt
 ```
 
 ### 0.2 错误处理
