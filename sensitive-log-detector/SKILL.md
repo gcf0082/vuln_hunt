@@ -26,14 +26,14 @@ compatibility:
 按以下步骤严格顺序执行，**不得跳过、合并或变更顺序**：
 
 1. **Step 0** — 运行脚本，分派 agent（仅执行脚本 + 错误处理 + 分派）
-2. **Steps 1-5** — 由 log-analyzer agent 按 `<skill_dir>/agents/log-analyzer.md` 执行分析
+2. **Steps 1-4** — 由 log-analyzer agent 按 `<skill_dir>/agents/log-analyzer.md` 执行分析
 3. **Step 6** — 合并详情（所有 agent 完成后运行 merge-hits.py）
 
 ---
 
 ## Step 0: 日志采集
 
-**Step 0 仅允许执行脚本和分派 agent。禁止读取 `log_sink/`。所有分析由 agent 在 Steps 1-5 中完成。**
+**Step 0 仅允许执行脚本和分派 agent。禁止读取 `log_sink/`。所有分析由 agent 在 Steps 1-4 中完成。**
 
 ### 0.1 执行脚本
 
