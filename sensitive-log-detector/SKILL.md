@@ -69,7 +69,7 @@ python3 <skill_dir>/scripts/scan-logs.py [代码目录] [输出目录]
 
 ### 0.3 分析分派（必须执行）
 
-**每个文件必须分配独立的 log-analyzer agent，严禁将多个文件交给同一个 agent 处理。同时并发数不超过 5 个，超出部分排队等待前一批完成后再分派。**
+**每个文件必须分配独立的 log-analyzer agent，严禁将多个文件交给同一个 agent 处理。**
 
 遍历 `log_sink/` 下每个文件，逐一分配 **log-analyzer** agent：
 
