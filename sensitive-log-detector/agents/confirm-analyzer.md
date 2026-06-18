@@ -19,6 +19,8 @@ description: 读取 details/ 文件，打开源码确认每条疑似行的真实
 
 **一般情况下不要擅自移除。举证不足时默认保留疑似结论。**
 
+**证据必须包含从源码引用的实际代码行（行号 + 代码），仅有文字描述不算证据。**
+
 必须有充足证据才能做出判定：
 
 - **非问题** — 必须有充足证据确认变量非敏感，不确定时绝不移除。必须向上追溯，找到并输出变量的实际来源/内容，根据实际值判断是否可能包含敏感信息。找不到明确的赋值来源或无法确认实际内容时，不能下结论为误报，按疑似处理。
@@ -62,7 +64,9 @@ src/main/java/LoginService.java
     行38:  password = userService.getPassword(userId)    ← 源头
     行42:  logger.info("user password: %s", password)    ← 目标行
 
-  证据: password 来自 getPassword()，返回值明确为密码
+  证据:
+    行38:  password = userService.getPassword(userId)
+    // UserService.getPassword() 方法名及返回值明确为密码，确认敏感
 ```
 
 ```
@@ -73,9 +77,9 @@ src/main/java/UserDAO.java
     行50:  String sql = "SELECT id, name, email FROM users WHERE id = ?"  ← 硬编码常量
     行55:  logger.debug("executing query: {}", sql)                      ← 目标行
 
-  证据: 追踪至行50，sql 赋值为硬编码常量
-  "SELECT id, name, email FROM users WHERE id = ?"，
-  只含表名、列名、占位符，不含用户输入，确认无敏感信息
+  证据:
+    行50:  String sql = "SELECT id, name, email FROM users WHERE id = ?"
+    // 硬编码 SQL 常量，只含表名、列名、占位符，不含用户输入，确认非问题
 ```
 
 **标签说明：**
