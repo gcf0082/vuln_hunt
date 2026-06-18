@@ -192,9 +192,10 @@ PII 类：
 
 ## 输出文件
 
-确认保留的疑似敏感行写入 `hits/`：
+确认保留的疑似敏感行写入 `<dir>/hits/`：
 
-- 路径：`log_sink/` → `hits/`，文件名不变（`sensitive-logs-NNN.txt`）
+- 路径：`<dir>/hits/sensitive-logs-NNN.txt`
+- `<dir>` 与输入路径中的 `<dir>` 相同（即 `.vuln_agent_output/sensitive-log-detector/`）
 - 格式：与 `log_sink/` 一致，仅含确认行：`序号# 日志内容`
 - 序号保持原始序号不变
 
