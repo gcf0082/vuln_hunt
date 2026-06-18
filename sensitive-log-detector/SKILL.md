@@ -58,7 +58,7 @@ python3 <skill_dir>/scripts/scan-logs.py [代码目录] [输出目录]
     sensitive-logs-001.txt          ← 行号: 日志内容（按源码文件分组）
     sensitive-logs-002.txt
   confirmed/                        ← 最终确认（agent 输出，含调用链）
-    sensitive-logs-001.txt          ← 行号: 日志内容  [确认/已移除]
+    sensitive-logs-001.txt          ← 行号: 日志内容  [确认问题/疑似问题/非问题]
 ```
 
 ### 0.2 错误处理
@@ -106,6 +106,6 @@ python3 <skill_dir>/scripts/merge-hits.py [输出目录]
 使用 <skill_dir>/agents/confirm-analyzer.md agent 分析 <path>/details/sensitive-logs-NNN.txt
 ```
 
-每个 agent 输出到 `<dir>/confirmed/sensitive-logs-NNN.txt`，每条标注 [确认] 或 [已移除] 并附带调用链和举证代码。
+每个 agent 输出到 `<dir>/confirmed/sensitive-logs-NNN.txt`，每条标注 [确认问题] 或 [非问题] 并附带调用链和举证代码。
 
 **结果聚合：** 父会话收集所有 agent 完成通知，确认 `confirmed/` 下文件数量。
