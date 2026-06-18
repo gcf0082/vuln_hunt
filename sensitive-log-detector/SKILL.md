@@ -28,6 +28,7 @@ compatibility:
 1. **Step 0** — 运行脚本，分派 agent（仅执行脚本 + 错误处理 + 分派）
 2. **Steps 1-4** — 由 log-analyzer agent 按 `<skill_dir>/agents/log-analyzer.md` 执行分析
 3. **Step 6** — 合并详情（所有 agent 完成后运行 merge-hits.py）
+4. **Step 7** — 最终确认（按 detail 文件分派 confirm-analyzer agent）
 
 ---
 
@@ -54,8 +55,10 @@ python3 <skill_dir>/scripts/scan-logs.py [代码目录] [输出目录]
   hits/                             ← agent 分析结果
     sensitive-logs-001.txt
   details/                          ← 合并详情（所有 hits 合并，100 条/文件）
-    sensitive-logs-001.txt          ← 序号# 日志内容 + 源码路径
+    sensitive-logs-001.txt          ← 行号: 日志内容（按源码文件分组）
     sensitive-logs-002.txt
+  confirmed/                        ← 最终确认（agent 输出，含调用链）
+    sensitive-logs-001.txt          ← 行号: 日志内容  [确认/已移除]
 ```
 
 ### 0.2 错误处理
@@ -91,4 +94,18 @@ python3 <skill_dir>/scripts/scan-logs.py [代码目录] [输出目录]
 python3 <skill_dir>/scripts/merge-hits.py [输出目录]
 ```
 
-输出到 `<输出目录>/details/`，每条日志附带源码路径。
+输出到 `<输出目录>/details/`，所有命中行按源码文件分组，每条以 `行号: 日志内容` 格式。
+
+---
+
+## Step 7: 最终确认
+
+`details/` 生成后，遍历每个文件分派 **confirm-analyzer** agent：
+
+```
+使用 <skill_dir>/agents/confirm-analyzer.md agent 分析 <path>/details/sensitive-logs-NNN.txt
+```
+
+每个 agent 输出到 `<dir>/confirmed/sensitive-logs-NNN.txt`，每条标注 [确认] 或 [已移除] 并附带调用链和举证代码。
+
+**结果聚合：** 父会话收集所有 agent 完成通知，确认 `confirmed/` 下文件数量。
