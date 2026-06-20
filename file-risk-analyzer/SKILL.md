@@ -8,7 +8,7 @@ allowed-tools: Read Bash Task Write
 
 你收到一批文件路径，需要逐一进行安全风险分析并定级。每个文件独立分析，互不干扰。
 
-本 skill 仅负责解析文件列表、准备输出路径、派发 subagent 进行分析。**所有分析逻辑在 agents/file-analyzer.md 中，本文件不执行任何分析。**
+本 skill 仅负责解析文件列表、准备输出路径、派发 subagent。**所有分析逻辑由 subagent 内部加载 agents/file-analyzer.md 执行，本文件不执行任何分析。**
 
 ## 输出目录
 
@@ -35,19 +35,10 @@ allowed-tools: Read Bash Task Write
 2. 构造输出路径：`{当前目录}/.vuln_agent_output/file_rksk/{去掉前导/的绝对路径}.md`
 3. 创建该输出文件所需的所有父目录
 
-### Step 1：派发 subagent 分析
+### Step 1：派发 subagent
 
-遍历每个文件，使用 `<skill_dir>/agents/file-analyzer.md` subagent 进行分析：
-
-```
-- Subagent 类型：general
-- 子任务内容：按 agents/file-analyzer.md 分析该文件
-- 传递参数：{文件路径, 输出路径}
-- 每个文件启动一个独立的 subagent 任务
-```
-
-确保所有 subagent 任务启动后等待其完成。
+遍历每个文件，启动一个独立的 subagent 任务，传递 `{文件路径, 输出路径}`。subagent 内部会加载 file-analyzer.md 执行全部分析。
 
 ### Step 2：汇总确认
 
-所有文件分析完成后，输出汇总确认信息。
+所有 subagent 完成后，输出汇总确认信息。
