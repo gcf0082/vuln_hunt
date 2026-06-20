@@ -39,6 +39,8 @@ allowed-tools: Read Bash Task Write
 
 遍历每个文件，启动一个独立的 subagent 任务，传递 `{文件路径, 输出路径}`。subagent 内部会加载 file-analyzer.md 执行全部分析。
 
+**严禁：** 不得对识别到的行为做任何风险评级、安全评估或漏洞判定。
+
 ### Step 2：汇总确认
 
 所有 subagent 完成后，输出汇总确认信息。
