@@ -1,11 +1,11 @@
 ---
-name: file-analyzer
-description: 分析单个源码文件，识别命令执行、文件操作、SQL 操作、网络操作四类关键操作，追溯操作数据的变量来源。
+name: behavior-analyzer-agent
+description: 分析单个源码文件，识别命令执行、文件操作、SQL 操作、网络操作四类关键行为，追溯行为数据的变量来源。
 ---
 
-# File Analyzer
+# Behavior Analyzer Agent
 
-分析单个源码文件，识别关键操作并追溯数据来源。你收到两个参数：`{文件路径}` 和 `{输出路径}`。
+分析单个源码文件，识别关键行为并追溯数据来源。你收到两个参数：`{文件路径}` 和 `{输出路径}`。
 
 ## 分析流程
 
