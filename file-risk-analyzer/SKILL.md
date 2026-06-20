@@ -18,19 +18,19 @@ allowed-tools: Read Grep Glob Bash Write
 ```
 
 **路径解析规则：**
-- 若收到的是相对路径，先用 `realpath` 或 `readlink -f` 解析为绝对路径
+- 若收到的是相对路径，基于当前工作目录将其解析为绝对路径
 - 从绝对路径去掉前导 `/`，再追加 `.md` 作为输出文件路径
-- 输出路径 = `{CWD}/.vuln_agent_output/file_rksk/{去掉前导/的路径}.md`
-- 父目录不存在则自动 `mkdir -p` 创建
+- 输出根目录为当前目录下的 `.vuln_agent_output/file_rksk/`
+- 确保输出文件的所有父目录存在（不存在则创建）
 - 输出文件已存在则直接覆盖
 
 ## 分析流程
 
 ### Step 0：确定输出路径
 
-1. 用 `realpath` 或 `readlink -f` 将输入的路径解析为绝对路径（已是则跳过）
-2. 构造输出路径：`{CWD}/.vuln_agent_output/file_rksk/{绝对路径去掉前导/}.md`
-3. 用 `mkdir -p "$(dirname "$输出路径")"` 创建父目录
+1. 将输入路径解析为绝对路径（结合当前工作目录）
+2. 构造输出路径：`{当前目录}/.vuln_agent_output/file_rksk/{去掉前导/的绝对路径}.md`
+3. 创建输出文件所需的所有父目录
 
 ### Step 1：读取文件
 
