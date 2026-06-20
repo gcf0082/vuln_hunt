@@ -8,7 +8,29 @@ allowed-tools: Read Grep Glob Bash Write
 
 你收到一个文件路径，需要对该文件进行风险分析并定级。
 
+## 输出目录
+
+分析结果写入当前目录下的 `.vuln_agent_output/file_rksk/` 中，按源文件的全路径生成子目录结构：
+
+```
+源文件: /opt/myproject/Main.java
+输出:   .vuln_agent_output/file_rksk/opt/myproject/Main.java.md
+```
+
+**路径解析规则：**
+- 若收到的是相对路径，先用 `realpath` 或 `readlink -f` 解析为绝对路径
+- 从绝对路径去掉前导 `/`，再追加 `.md` 作为输出文件路径
+- 输出路径 = `{CWD}/.vuln_agent_output/file_rksk/{去掉前导/的路径}.md`
+- 父目录不存在则自动 `mkdir -p` 创建
+- 输出文件已存在则直接覆盖
+
 ## 分析流程
+
+### Step 0：确定输出路径
+
+1. 用 `realpath` 或 `readlink -f` 将输入的路径解析为绝对路径（已是则跳过）
+2. 构造输出路径：`{CWD}/.vuln_agent_output/file_rksk/{绝对路径去掉前导/}.md`
+3. 用 `mkdir -p "$(dirname "$输出路径")"` 创建父目录
 
 ### Step 1：读取文件
 
@@ -54,9 +76,11 @@ allowed-tools: Read Grep Glob Bash Write
 
 **优先级规则：** 一个代码片段如果同时命中多条规则，取最高评级。
 
-### Step 4：输出
+### Step 4：写入文件
 
-按以下格式输出每个风险点。无风险则输出"**该文件未发现风险点。**"
+将分析结果写入输出文件。无风险则写入"**该文件未发现风险点。**"
+
+每条风险点使用以下格式：
 
 ```
 **N. 风险类型 · 行号 X-Y**
@@ -89,6 +113,8 @@ os.system(cmd)
 ```
 **数据来源：** `video_path` ← `request.files['video'].filename`（外部直连）
 ```
+
+写入完成后，在 stdout 输出确认：`分析结果已写入: {输出路径}`
 
 ## 纪律
 
