@@ -32,35 +32,35 @@ allowed-tools: Read Grep Glob Bash Write
 2. 构造输出路径：`{当前目录}/.vuln_agent_output/file_rksk/{去掉前导/的绝对路径}.md`
 3. 创建输出文件所需的所有父目录
 
-### Step 1：读取文件
+### Step 1：一次性读取
 
-用 Read 工具读取文件全文，了解文件整体功能。
+一次性读取文件全文。读取完成后不再对文件做任何关键词搜索或 Grep 匹配——后续分析完全依赖本次读取的内容进行语义理解。
 
-### Step 2：扫描六类风险
+### Step 2：逐段审查六类风险
 
-对以下六类风险逐类扫描，每类用 Grep 搜索关键词，然后读取命中行附近的上下文确认。
+基于已读入的文件内容，逐段审查以下六类风险。禁止对文件做任何关键词搜索或 Grep 匹配——必须依赖 Step 1 读入的内容进行语义分析。
 
 **关键原则：** 对每个疑似风险点，必须追溯所有涉及的变量来源，确认是外部可控还是内部硬编码。**"外部"指当前文件之外**——函数参数、全局变量、import 的模块变量、网络/DB 读取的值、环境变量、用户输入等都属于外部变量。文件内部字面量/常量定义属于内部变量。
 
 #### ① 命令/代码执行
-搜索关键词：`os.system`、`os.popen`、`subprocess`、`exec`、`eval`、`popen`、`Popen`、`run(`、`call(`、`Runtime.exec`、`ProcessBuilder`、`execScript`、`new Function`、`child_process`、`spawn`、`execFile`
+检查是否存在调用系统命令、启动子进程、动态执行代码的逻辑（如系统命令调用、子进程创建、eval/exec 类动态执行、表达式求值等）。
 
 #### ② 路径类文件操作
-搜索关键词：`open(`、`os.path.join`、`Path(`、`pathlib`、`file_get_contents`、`File.Open`、`file_put_contents`、`fopen`、`fwrite`、`os.remove`、`shutil`、`upload`、`download`、`save`、`read(` 且参数含拼接/插值
+检查文件读写、移动、删除、上传、下载等操作，关注路径参数是否由外部数据拼接而成。
 
 #### ③ SQL 拼接
-搜索关键词：`SELECT`、`INSERT`、`UPDATE`、`DELETE`、`WHERE` 附近出现字符串拼接 `+`、`f"`、`f'`、`format(`、`%`、`$"`、`$'`、字符串插值，且操作对象是数据库调用（`execute`、`query`、`cursor`、`mysqli_query`、`pg_query`、`raw`、`sql`）
+检查数据库查询语句中是否混入了字符串拼接或插值操作。
 
 #### ④ URL 拼接
-搜索关键词：`requests`、`urllib`、`httpx`、`fetch`、`axios`、`HttpClient`、`URL(` 附近出现字符串拼接/插值
+检查 HTTP 请求或网络请求的 URL 是否包含拼接的外部数据。
 
 #### ⑤ 直接安全漏洞
-- **证书校验绕过：** `verify=False`、`check_hostname=False`、`ssl._create_unverified_context`、`CERT_NONE`
-- **硬编码认证凭据：** 变量名含 `password`/`secret`/`token`/`api_key`/`apikey`/`client_secret`/`auth` 且值为字面量字符串
-- **ReDoS：** 正则表达式 `re.compile(`/`re.match(`/`re.search(`/`re.sub(` 中模式含有嵌套量词 `(a+)+`、`(a|b)*` 等易导致 catastrophic backtracking 的模式
+- **证书校验绕过：** 证书验证被跳过或设为不校验
+- **硬编码认证凭据：** 密码、密钥、令牌等认证凭据以字面量形式出现在代码中
+- **ReDoS：** 正则模式中存在嵌套量词等可导致 catastrophic backtracking 的结构
 
 #### ⑥ 敏感信息日志
-搜索关键词：日志输出语句（`logging`、`print`、`logger`、`console.log`、`fmt.Println`、`System.out`）中变量名包含 `password`、`secret`、`token`、`key`、`credential`、`private`、`certificate`、`jwt`、`session`、`credit`、`ssn`、`pwd`
+检查日志输出或打印语句中是否输出了疑似密码、密钥、令牌、证书、会话标识等敏感变量。
 
 ### Step 3：定级
 
