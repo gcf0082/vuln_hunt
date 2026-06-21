@@ -102,13 +102,4 @@ resp = requests.post(url, data=payload, headers=auth_headers)
   - url 外部 ← config.API_ENDPOINT
   - payload 外部 ← request.body
   - auth_headers 内部
-
-## 2. SQL 操作 · 55-57
-业务上下文：用户查询
-代码：
-```python
-cur.execute(f"SELECT * FROM users WHERE id = {user_id}")
-```
-变量来源：
-  - user_id 外部 ← request.args.get('id')
 ```
