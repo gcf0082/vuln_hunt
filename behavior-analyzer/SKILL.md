@@ -16,12 +16,12 @@ allowed-tools: Read Bash Task Write
 
 ```
 源文件: /opt/myproject/Main.java
-输出:   .vuln_agent_output/behavior/opt/myproject/Main.java.md
+输出:   .vuln_agent_output/behavior/opt/myproject/Main.java.yaml
 ```
 
 **路径解析规则：**
 - 若收到的是相对路径，基于当前工作目录将其解析为绝对路径
-- 从绝对路径去掉前导 `/`，再追加 `.md` 作为输出文件路径
+- 从绝对路径去掉前导 `/`，再追加 `.yaml` 作为输出文件路径
 - 输出根目录为当前目录下的 `.vuln_agent_output/behavior/`
 - 确保输出文件的所有父目录存在（不存在则创建）
 - 输出文件已存在则直接覆盖
