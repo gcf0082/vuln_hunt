@@ -42,50 +42,60 @@ description: 分析单个源码文件，识别命令执行、文件操作、SQL 
 
 将识别结果写入输出文件。只输出确认到操作的结果，未发现操作的类别不列出。无操作时不生成输出文件。
 
-每条结果使用固定 YAML 结构，多条结果构成一个 YAML 列表：
+每条结果使用以下结构：
 
-```yaml
-- type: 命令执行          # 操作类型
-  line: 85-90             # 行号范围
-  context: 视频上传处理    # 业务上下文
-  code: |                 # 代码片段（保留换行）
-    cmd = f"ffmpeg -i {video_path} -vcodec libx265 output.mp4"
-    os.system(cmd)
-  vars:                   # 涉及的变量列表
-    - name: video_path
-      source: 外部        # 外部 / 内部
-      trace: request.files['video'].filename
+```markdown
+## N. 操作类型 · 行号 X-Y
+业务上下文：一句话描述
+代码：
+```
+code here
+```
+变量来源：
+  - 变量名 外部/内部 ← 追溯路径
 ```
 
 **字段说明：**
-- **type** — 操作类型：命令执行 / 文件操作 / SQL 操作 / 网络操作
-- **line** — 操作代码的起始行-结束行
-- **context** — 一句话描述该文件在系统中所处的业务环节，基于文件内容自然推断
-- **code** — 关键代码块（使用 `|` 保留换行，无需整段，突出操作部分即可）
-- **vars** — 变量列表，每项包含：
-  - `name` — 变量名
-  - `source` — 外部（函数参数/全局变量/import 模块/网络DB读取/环境变量/用户输入）或 内部（硬编码字面量/常量）
-  - `trace` — 变量来源的追溯路径
+- **标题行** — `操作类型 · 行号`，如 `命令执行 · 85-90`
+- **操作类型：** 命令执行 / 文件操作 / SQL 操作 / 网络操作
+- **业务上下文：** 一句话描述该文件在系统中所处的业务环节，基于文件内容自然推断
+- **代码：** 关键代码块
+- **变量来源：** 每行一个变量，格式 `变量名 外部/内部 ← 追溯路径`。多变量逐行列，无变量时该项不输出
+
+**示例：**
+```markdown
+## 1. 命令执行 · 85-90
+业务上下文：视频上传处理
+代码：
+```python
+cmd = f"ffmpeg -i {video_path} -vcodec libx265 output.mp4"
+os.system(cmd)
+```
+变量来源：
+  - video_path 外部 ← request.files['video'].filename
+```
 
 **多变量示例：**
-```yaml
-- type: 网络请求
-  line: 120-125
-  context: 用户数据同步
-  code: |
-    resp = requests.post(url, data=payload, headers=auth_headers)
-  vars:
-    - { name: url, source: 外部, trace: config.API_ENDPOINT }
-    - { name: payload, source: 外部, trace: request.body }
-    - { name: auth_headers, source: 内部 }
+```markdown
+## 1. 网络请求 · 120-125
+业务上下文：用户数据同步
+代码：
+```python
+resp = requests.post(url, data=payload, headers=auth_headers)
+```
+变量来源：
+  - url 外部 ← config.API_ENDPOINT
+  - payload 外部 ← request.body
+  - auth_headers 内部
 
-- type: SQL 操作
-  line: 55-57
-  context: 用户查询
-  code: |
-    cur.execute(f"SELECT * FROM users WHERE id = {user_id}")
-  vars:
-    - { name: user_id, source: 外部, trace: request.args.get('id') }
+## 2. SQL 操作 · 55-57
+业务上下文：用户查询
+代码：
+```python
+cur.execute(f"SELECT * FROM users WHERE id = {user_id}")
+```
+变量来源：
+  - user_id 外部 ← request.args.get('id')
 ```
 
 写入完成后返回确认信息。
