@@ -8,7 +8,7 @@ allowed-tools: Read Bash Task Write
 
 你收到一批文件路径，需要逐一分析其中的关键行为。每个文件独立分析，互不干扰。
 
-本 skill 仅负责收集文件列表、生成 manifest、派发 subagent 并校验完成度。**所有分析逻辑由 subagent 内部加载 agents/file-analyzer.md 执行，本文件不执行任何分析。**
+本 skill 仅负责收集文件列表、生成 tudo、派发 subagent 并校验完成度。**所有分析逻辑由 subagent 内部加载 agents/file-analyzer.md 执行，本文件不执行任何分析。**
 
 ## 输出目录
 
@@ -28,7 +28,7 @@ allowed-tools: Read Bash Task Write
 
 ## 分析流程
 
-### Step 0：收集文件列表，生成 manifest
+### Step 0：收集文件列表，生成 tudo
 
 若输入是目录路径：
   1. 递归扫描该目录，智能识别所有文本格式的文件
@@ -39,20 +39,20 @@ allowed-tools: Read Bash Task Write
 
 合并后：
   1. 将当前时间戳格式化为 `YYMMDD-HHMMSS`
-  2. 在 `.vuln_agent_output/behavior/` 下创建 `manifest-{时间戳}.txt`
+  2. 在 `.vuln_agent_output/behavior/` 下创建 `tudo-{时间戳}.txt`
   3. 每行格式：`[待处理] <文件绝对路径>`
   4. 同时为每个文件准备好输出路径，创建所需父目录
 
-### Step 1：派发 subagent 并更新 manifest
+### Step 1：派发 subagent 并更新 tudo
 
-遍历 manifest 中状态为 `[待处理]` 的文件：
+遍历 tudo 中状态为 `[待处理]` 的文件：
   1. 启动一个独立的 subagent 任务，传递 `{文件路径, 输出路径}`
-  2. subagent 完成后，将 manifest 中对应行的 `[待处理]` 改为 `[已完成]`
+  2. subagent 完成后，将 tudo 中对应行的 `[待处理]` 改为 `[已完成]`
 
 **严禁：** 安全风险分析和跨文件分析。
 
 ### Step 2：校验完成度
 
-读取 manifest 文件：
+读取 tudo 文件：
   - 若还有 `[待处理]` 条目，重新派发直至全部完成
   - 全部为 `[已完成]` 后，输出确认信息
