@@ -4,7 +4,7 @@
 
 ## 分类
 
-HTTP / RPC / MQ / CLI / CRON / OUTBOUND_HTTP
+HTTP / RPC / MQ / CLI / CRON
 
 ## 原则
 
