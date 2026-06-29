@@ -1,0 +1,8 @@
+{
+  "name": "project-surfacing",
+  "version": "1.0.0",
+  "description": "Map external attack surfaces by identifying cross-trust-boundary entry points before vulnerability analysis",
+  "author": {
+    "name": "vuln_hunt"
+  }
+}
