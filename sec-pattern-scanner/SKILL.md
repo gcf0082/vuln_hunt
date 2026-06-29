@@ -5,7 +5,7 @@ description: 针对单个文件快速分析，识别不安全协议/弱加密/TL
 
 # sec-pattern-scanner
 
-给一个文件路径，读取文件内容，逐行比对检测模式，输出所有匹配项。
+给一个文件路径，读取文件内容，逐行比对检测模式，落盘结果。
 
 ## 执行流程
 
@@ -35,11 +35,28 @@ description: 针对单个文件快速分析，识别不安全协议/弱加密/TL
 - 去除首尾空白
 - 超过 120 字符截断加 `...`
 
-### 5. 输出
+### 5. 落盘
 
-每个匹配结果一条记录，`---` 分隔，按风险高→中排序。
+结果写入 `.vuln_agent_output/sec-pattern-scanner/` 下，子路径镜像源文件路径。
+
+**路径规则**：
+```
+源文件: /root/target/src/main/java/com/acme/HttpUtil.java
+输出:   .vuln_agent_output/sec-pattern-scanner/src/main/java/com/acme/HttpUtil.java.md
+```
 
 ```
+工具: Write
+参数: filePath={.vuln_agent_output/sec-pattern-scanner/相对路径.md}
+参数: content={分析结果}
+```
+
+**输出格式**（有匹配时）：
+
+```
+文件: src/main/java/com/acme/HttpUtil.java
+结果: 2 个匹配
+
 ---
 风险: 高
 类别: 不安全协议
@@ -47,22 +64,26 @@ description: 针对单个文件快速分析，识别不安全协议/弱加密/TL
 代码: return conn.openConnection(new URL("http://api.internal.com/"))
 理由: 使用明文 HTTP 协议，数据未加密传输，可被中间人窃取或篡改
 ---
+风险: 中
+类别: 信息泄露
+行号: 102
+代码: e.printStackTrace();
+理由: 打印完整堆栈跟踪到标准输出，可能泄露内部路径和逻辑
 ```
 
 无匹配时：
-```
----
-风险: -
-类别: -
-行号: -
-代码: -
-理由: 该文件中未发现单文件可识别的安全模式
----
-```
 
-所有结果全部列出，不抽样。文件路径不在每条里带，直接在输出开头注明：
 ```
 文件: src/main/java/com/acme/HttpUtil.java
+结果: 0 个匹配
+```
+
+### 6. 回复确认
+
+落盘后用一句简短汇报：
+
+```
+src/main/java/com/acme/HttpUtil.java → 2 个匹配 (.vuln_agent_output/sec-pattern-scanner/)
 ```
 
 ## 不遗漏检查
@@ -70,3 +91,4 @@ description: 针对单个文件快速分析，识别不安全协议/弱加密/TL
 - [ ] `patterns.md` 中所有模式均已比对过
 - [ ] 注释行已跳过
 - [ ] 所有匹配全部列出，不抽样
+- [ ] 结果已落盘到 `.vuln_agent_output/sec-pattern-scanner/` 对应路径
