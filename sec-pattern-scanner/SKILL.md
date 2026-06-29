@@ -15,28 +15,39 @@ description: 单文件级快速漏洞模式扫描，识别不安全协议/弱加
 
 ### 2. 读取检测模式
 
-读取同目录下的 `patterns.md`，逐条提取 grep 模式。
+读取同目录下的 `patterns.md`，得到所有风险/类别/grep模式/理由。
 
 ### 3. 逐条搜索
 
-对每条模式执行：
+对每条模式，用 **Grep 工具**在目标目录下搜索（正则模式用 ERE）：
 
-```bash
-grep -rn --include="*.java" --include="*.py" --include="*.go" --include="*.js" \
-  --include="*.ts" --include="*.php" --include="*.rb" --include="*.rs" \
-  --include="*.yml" --include="*.yaml" --include="*.properties" \
-  --include="*.xml" --include="*.conf" --include="*.cfg" --include="*.env" \
-  --include="Dockerfile*" --include="*.sh" --include="*.bash" \
-  -E "{grep_pattern}" {target_dir} \
-  | grep -v "/test/" | grep -v "/tests/" | grep -v "/__tests__/" \
-  | grep -v "/spec/" | grep -v "/node_modules/" | grep -v "/vendor/"
+```
+工具: Grep
+参数: pattern={grep_pattern}, path={target_dir}
 ```
 
-排除路径和语言可按项目实际结构调整。
+扫描后对每条结果做两层过滤：
+- **排除路径**：结果中文件路径含 `/test/` `/tests/` `/__tests__/` `/spec/` `/node_modules/` `/vendor/` 的丢弃
+- **排除注释行**：行内容以 `//` `#` `<!--` 开头或紧跟前导空白后为注释的丢弃
 
-### 4. 整理输出
+### 4. 读代码行
 
-每个匹配结果一条记录，`---` 分隔，按风险高→中排序，同风险按类别集中。
+对每条匹配结果，用 **Read 工具**读取该行（`filePath`，`offset=行号`，`limit=1`），得到实际代码行。
+
+```python
+工具: Read
+参数: filePath={绝对路径}, offset={行号}, limit=1
+```
+
+**代码行处理**：
+- 去除首尾空白
+- 超过 120 字符则截断加 `...`
+
+如果 Read 失败（文件编码问题等），代码字段写 `(无法读取)`。
+
+### 5. 整理输出
+
+每个匹配结果一条记录，`---` 分隔，按风险高→中排序，同风险内按类别集中。
 
 ```
 ---
@@ -49,10 +60,7 @@ grep -rn --include="*.java" --include="*.py" --include="*.go" --include="*.js" \
 ---
 ```
 
-每行代码需**去除首尾空白**（`sed 's/^[[:space:]]*//;s/[[:space:]]*$//'`），过长（>120 字符）则截断至 120 字符后加 `...`。
-
-### 5. 无匹配时
-
+无匹配时：
 ```
 ---
 风险: -
@@ -64,10 +72,14 @@ grep -rn --include="*.java" --include="*.py" --include="*.go" --include="*.js" \
 ---
 ```
 
+所有结果全部列出，不抽样。
+
 ## 不遗漏检查
 
 - [ ] `patterns.md` 中所有模式均已搜索完毕
 - [ ] 每条结果包含 风险 + 类别 + 文件路径 + 行号 + 代码 + 理由
-- [ ] 所有结果全部列出，不抽样
+- [ ] 所有结果全部列出
 - [ ] 排除路径（test/node_modules/vendor 等）已过滤
+- [ ] 注释行已被排除
 - [ ] 代码行已去空白、截断处理
+- [ ] Read 失败的行已标注 `(无法读取)`
