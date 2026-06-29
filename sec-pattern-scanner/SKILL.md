@@ -5,7 +5,7 @@ description: 针对单个文件快速分析，识别不安全协议/弱加密/TL
 
 # sec-pattern-scanner
 
-给一个文件路径，读取文件内容，逐行比对检测模式，落盘结果。
+给一个文件路径，读取全文，凭安全知识识别不安全的代码模式，落盘结果。
 
 ## 执行流程
 
@@ -15,7 +15,7 @@ description: 针对单个文件快速分析，识别不安全协议/弱加密/TL
 
 ### 2. 读取检测模式
 
-读取同目录下的 `patterns.md`，得到所有风险/类别/正则模式/理由。
+读取同目录下的 `patterns.md`，作为风险类别**方向参考**，**不用于正则匹配**。
 
 ### 3. 读取文件
 
@@ -24,16 +24,25 @@ description: 针对单个文件快速分析，识别不安全协议/弱加密/TL
 参数: filePath={目标文件}
 ```
 
-### 4. 逐行检查
+通读全文。
 
-逐行读文件内容，对每一行比对 `patterns.md` 中的正则模式：
+### 4. 全文分析
 
-- 匹配 → 记录：风险/类别/行号/代码行/理由
-- 注释行跳过（行内容以 `//` `#` `<!--` 开头）
+以 `patterns.md` 中的风险类别作为指引方向，凭安全知识识别文件中所有不安全模式。
 
-**代码行处理**：
-- 去除首尾空白
-- 超过 120 字符截断加 `...`
+**识别范围**不限于 patterns.md 的精确写法，包括其变体：
+- 同类别不同 API：`TrustAllCertManager` → 自定义 TrustManager 空实现、匿名类 `checkServerTrusted` 空方法体
+- 语言/框架特有等价写法：Spring `.csrf(c -> c.disable())`、`.csrf(csrf -> csrf.disable())`
+- 命名变体：`password` → `passwd` → `pwd` → `pwdSecret` → `passCode`
+- 配置开关不同形式：`enabled: false` → `disable: true` → `off` → `0`
+- 特定框架的配置：`ssl.verify=false`、`strictSSL=false`、`NODE_TLS_REJECT_UNAUTHORIZED=0`
+- 注释中遗留的 TODO/FIXME/HACK 涉及安全操作的
+- 其他明显有风险的自定义实现：自定义 HostnameVerifier 恒定返回 true、`Permission.all()` 覆盖等
+
+**输出规则**：
+- 每个独立行一个条目（含行号）
+- 同类别连续配置块（如多行的 TLS 配置）可合并为一条，行号取起始行
+- 注释行中明确标注安全风险的也纳入
 
 ### 5. 落盘
 
@@ -88,7 +97,7 @@ src/main/java/com/acme/HttpUtil.java → 2 个匹配 (.vuln_agent_output/sec-pat
 
 ## 不遗漏检查
 
-- [ ] `patterns.md` 中所有模式均已比对过
-- [ ] 注释行已跳过
+- [ ] 以 `patterns.md` 所有类别为方向全部过了一遍
+- [ ] 常见的变体写法也考虑到了
 - [ ] 所有匹配全部列出，不抽样
 - [ ] 结果已落盘到 `.vuln_agent_output/sec-pattern-scanner/` 对应路径
