@@ -132,8 +132,9 @@ prompt:
    task subagent: source-vulnerability-analyst
    prompt: 调用 source-analyze-vuln skill
            - work_dir: .
-           - input: analyzed_surfaces/{surface 相对路径}
-           - vuln_plans: vuln_plans/{stem}/（有则读取）
+           - discovered_surface: discovered_surfaces/{surface 相对路径}
+           - analyzed_surface: analyzed_surfaces/{surface 相对路径}
+           - plan_files: vuln_plans/{stem}/（有则读取，每个规划文件）
            产物: vuln_findings/{子目录/}{stem}-{n}.md
 
 4. 【source-review】需要时调用：
