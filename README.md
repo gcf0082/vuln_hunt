@@ -63,7 +63,7 @@
 ├── sink_list/                 ← sink 阶段 0 产物
 ├── sink_findings/             ← sink 阶段 1 产物
 ├── sink_reviews/              ← sink 阶段 2 产物
-├── .collect_done              ← source-collect 完成信号
+├── .surface_discover_done              ← source-collect 完成信号
 └── meta/error/                ← 各 skill 错误日志
 ```
 

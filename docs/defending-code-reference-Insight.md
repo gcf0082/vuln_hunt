@@ -36,7 +36,7 @@ source-orchestrator / sink-orchestrator 与参考项目的 vuln-pipeline run 思
 
 ### 优势 3：产物目录结构统一
 
-`.vuln_agent_output/` 与参考项目的 `results/<target>/<ts>/` 等价。`.collect_done` 完成信号类似 `result.json` checkpoint。文件名带 MMDD-HHMMSS 时间戳比参考项目更紧凑（参考项目用目录分层，vuln_hunt 用文件名编码）。
+`.vuln_agent_output/` 与参考项目的 `results/<target>/<ts>/` 等价。`.surface_discover_done` 完成信号类似 `result.json` checkpoint。文件名带 MMDD-HHMMSS 时间戳比参考项目更紧凑（参考项目用目录分层，vuln_hunt 用文件名编码）。
 
 ### 优势 4：认定分级比参考项目更精细
 
@@ -769,7 +769,7 @@ echo "$(cat $ROOT/meta/error/*.md 2>/dev/null | head -20)"
 | **认定分级 4 档（VULN/DISMISSED/CLEAN/SUSPECTED）** | SUSPECTED 对合规审计友好，DISMISSED 降低误报焦虑 | 可以对齐 MITRE 的 CWE 分类 |
 | **按 slug 命名（动词-名词）+ 时间戳** | 产物可读性强，方便人工追溯 | 可以考虑加 `_index.md` 目录页 |
 | **三种工作模式（默认/优化/直接分析）** | 交互灵活性高 | 保持 |
-| **完成信号（.collect_done）** | 简洁的状态通道 | 可以推广到每个 stage |
+| **完成信号（.surface_discover_done）** | 简洁的状态通道 | 可以推广到每个 stage |
 | **vuln-dispatch 入口** | 一句话触发，自动分流 | 保持 |
 | **Skill 本身的"类 NPM 包"模式** | 每个技能独立目录，可复用 | 考虑建立公开 registry |
 
