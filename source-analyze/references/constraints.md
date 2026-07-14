@@ -10,7 +10,7 @@
 - 静态资源、图片、字体
 - 文档、README
 
-遇到这些非目标文件时跳过即可。
+遇到这些非目标文件时跳过即可，排除的路径会记录到 `{target_work_dir}/.vuln_agent_output/meta/excluded-paths.md` 供审计复核。
 
 ## 临时脚本
 
