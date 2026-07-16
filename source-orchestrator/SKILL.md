@@ -123,30 +123,30 @@ prompt:
    prompt: 调用 source-analyze skill
            - work_dir: .
            - surface_file: {surface 相对路径}
-           产物: analyzed_surfaces/{surface 相对路径}
+           产物: .vuln_agent_output/analyzed_surfaces/{surface 相对路径}
 
 2. 【vuln-planner】需要时调用：
    task subagent: source-vuln-planner
    prompt: 调用 vuln-planner skill
            - work_dir: .
            - surface_file: {surface 相对路径}
-           产物: vuln_plans/{stem}/
+           产物: .vuln_agent_output/vuln_plans/{stem}/
 
 3. 【source-analyze-vuln】需要时调用：
    task subagent: source-vulnerability-analyst
    prompt: 调用 source-analyze-vuln skill
            - work_dir: .
-           - discovered_surface: discovered_surfaces/{surface 相对路径}
-           - analyzed_surface: analyzed_surfaces/{surface 相对路径}
-           - plan_files: vuln_plans/{stem}/（有则读取，每个规划文件）
-           产物: vuln_findings/{子目录/}{stem}-{n}.md
+           - discovered_surface: .vuln_agent_output/discovered_surfaces/{surface 相对路径}
+           - analyzed_surface: .vuln_agent_output/analyzed_surfaces/{surface 相对路径}
+           - plan_files: .vuln_agent_output/vuln_plans/{stem}/（有则读取，每个规划文件）
+           产物: .vuln_agent_output/vuln_findings/{子目录/}{stem}-{n}.md
 
 4. 【source-review】需要时调用：
    task subagent: source-re-analyzer
    prompt: 调用 source-review skill
            - work_dir: .
-           - input: vuln_findings/{对应 finding}
-           产物: vuln_reviews/{子目录/}{stem}.md
+           - input: .vuln_agent_output/vuln_findings/{对应 finding}
+           产物: .vuln_agent_output/vuln_reviews/{子目录/}{stem}.md
 
 每阶段完成后，不必等所有子任务结束再汇报。该 surface 全部完成后即视为完成。
 ```
